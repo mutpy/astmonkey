@@ -1,0 +1,6 @@
+syntax: glob
+
+*.pyc
+astmonkey.egg-info
+.*.swp
+.*.swo
