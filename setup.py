@@ -11,6 +11,9 @@ setup(
     packages=['astmonkey'],
     test_suite='astmonkey.tests',
     install_requires=['pydot'],
-    classifiers=['Intended Audience :: Developers']
+    classifiers=[
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: Apache Software License'
+    ]
 )
 
