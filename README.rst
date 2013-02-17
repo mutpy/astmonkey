@@ -18,14 +18,15 @@ The easiest way to install ``astmonkey`` is clone this repository and use ``setu
 ------------------------------------------------
 
 This transformer adds few fields to every node in AST:
- * ``parent`` - link to parent node,
- * ``parents`` - list of all parents (only ``ast.expr_context`` nodes have more than one parent node, in other causes this is one-element list),
- * ``parent_field`` - name of field in parent node including child node,
- * ``parent_field_index`` - parent node field index, if it is a list.
+
+* ``parent`` - link to parent node,
+* ``parents`` - list of all parents (only ``ast.expr_context`` nodes have more than one parent node, in other causes this is one-element list),
+* ``parent_field`` - name of field in parent node including child node,
+* ``parent_field_index`` - parent node field index, if it is a list.
 
 Example usage:
 
-.. include:: examples/parent_node_transformer.py 
+.. include:: https://bitbucket.org/khalas/astmonkey/raw/default/examples/parent_node_transformer.py
    :literal:
 
 ``astmonkey.visitors.GraphNodeVisitor``
@@ -37,12 +38,12 @@ This visitor creates Graphviz graph from Python AST (via ``pydot``). Before you 
 
 Example usage:
 
-.. include:: examples/graph_node_visitor.py 
+.. include:: https://bitbucket.org/khalas/astmonkey/raw/default/examples/graph_node_visitor.py
    :literal:
 
 Produced ``graph.png``:
 
-.. image:: examples/graph.png
+.. image:: https://bitbucket.org/khalas/astmonkey/raw/default/examples/graph.png
 
 ``astmonkey.utils.is_docstring``
 --------------------------------
@@ -52,6 +53,6 @@ This routine checks if target node is a docstring. Before you use
 
 Example usage:
 
-.. include:: examples/is_docstring.py 
+.. include:: https://bitbucket.org/khalas/astmonkey/raw/default/examples/is_docstring.py
    :literal:
 
