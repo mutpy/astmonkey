@@ -10,6 +10,7 @@ setup(
     url='https://bitbucket.org/khalas/astmonkey',
     packages=['astmonkey'],
     test_suite='astmonkey.tests',
+    install_requires=['pydot'],
     classifiers=['Intended Audience :: Developers']
 )
 
