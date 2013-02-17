@@ -4,3 +4,4 @@ syntax: glob
 astmonkey.egg-info
 .*.swp
 .*.swo
+.DS_Store
