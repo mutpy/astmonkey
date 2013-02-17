@@ -84,6 +84,27 @@ Example usage:
     assert(not utils.is_docstring(node))
     assert(utils.is_docstring(docstring_node))
 
+``astmonkey.visitors.SourceGeneratorNodeVisitor``
+-------------------------------------------------
+
+This visitor allow AST to Python code generation. It was originally written by 
+Armin Ronacher (2008, license BSD) as ``codegen.py`` module. ``astmonkey`` version
+fixes few bugs and it has good code coverage.
+
+Example usage:
+
+::
+
+    import ast
+    from astmonkey import visitors 
+    
+    code = 'x = y + 1'
+    node = ast.parse(code)
+    generated_code = visitors.to_source(node) 
+
+    assert(code == generated_code)
+
+
 License
 -------
 
