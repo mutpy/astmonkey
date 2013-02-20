@@ -201,8 +201,6 @@ class SourceGeneratorNodeVisitor(ast.NodeVisitor):
             self.write('@')
             self.visit(decorator)
 
-    # Statements
-
     def visit_Assign(self, node):
         self.newline(node)
         for idx, target in enumerate(node.targets):
@@ -228,7 +226,7 @@ class SourceGeneratorNodeVisitor(ast.NodeVisitor):
                 name += ' as ' + alias.asname
             imports.append(name)
 
-        self.write('from {} import {}'.format(node.module, ', '.join(imports)))
+        self.write('from {0} import {1}'.format(node.module, ', '.join(imports)))
 
     def visit_Import(self, node):
         self.newline(node)
@@ -263,8 +261,6 @@ class SourceGeneratorNodeVisitor(ast.NodeVisitor):
         for base in node.bases:
             paren_or_comma()
             self.visit(base)
-        # XXX: the if here is used to keep this module compatible
-        #      with python 2.6.
         if hasattr(node, 'keywords'):
             for keyword in node.keywords:
                 paren_or_comma()
@@ -322,23 +318,6 @@ class SourceGeneratorNodeVisitor(ast.NodeVisitor):
         self.newline(node)
         self.write('pass', node)
 
-    def visit_Print(self, node):
-        # XXX: python 2.6 only
-        self.newline(node)
-        self.write('print ')
-        want_comma = False
-        if node.dest is not None:
-            self.write(' >> ')
-            self.visit(node.dest)
-            want_comma = True
-        for value in node.values:
-            if want_comma:
-                self.write(', ')
-            self.visit(value)
-            want_comma = True
-        if not node.nl:
-            self.write(',')
-
     def visit_Delete(self, node):
         self.newline(node)
         self.write('del ')
@@ -370,28 +349,6 @@ class SourceGeneratorNodeVisitor(ast.NodeVisitor):
     def visit_Continue(self, node):
         self.newline(node)
         self.write('continue')
-
-    def visit_Raise(self, node):
-        # XXX: Python 2.6 / 3.0 compatibility
-        self.newline(node)
-        self.write('raise')
-        if hasattr(node, 'exc') and node.exc is not None:
-            self.write(' ')
-            self.visit(node.exc)
-            if node.cause is not None:
-                self.write(' from ')
-                self.visit(node.cause)
-        elif hasattr(node, 'type') and node.type is not None:
-            self.write(' ')
-            self.visit(node.type)
-            if node.inst is not None:
-                self.write(', ')
-                self.visit(node.inst)
-            if node.tback is not None:
-                self.write(', ')
-                self.visit(node.tback)
-
-    # Expressions
 
     def visit_Attribute(self, node):
         self.visit(node.value)
@@ -445,7 +402,7 @@ class SourceGeneratorNodeVisitor(ast.NodeVisitor):
             self.visit(item)
         self.write(idx and ')' or ',)')
 
-    def sequence_visit(left, right): #@NoSelf
+    def sequence_visit(left, right):
         def visit(self, node):
             self.write(left)
             for idx, item in enumerate(node.elts):
@@ -483,12 +440,10 @@ class SourceGeneratorNodeVisitor(ast.NodeVisitor):
         self.write(')')
 
     def visit_Compare(self, node):
-        #self.write('(')
         self.visit(node.left)
         for op, right in zip(node.ops, node.comparators):
             self.write(' %s ' % CMPOP_SYMBOLS[type(op)])
             self.visit(right)
-        #self.write(')')
 
     def visit_UnaryOp(self, node):
         self.write('(')
@@ -537,7 +492,7 @@ class SourceGeneratorNodeVisitor(ast.NodeVisitor):
     def visit_Ellipsis(self, node):
         self.write('Ellipsis')
 
-    def generator_visit(left, right): #@NoSelf
+    def generator_visit(left, right):
         def visit(self, node):
             self.write(left)
             self.visit(node.elt)
@@ -571,14 +526,6 @@ class SourceGeneratorNodeVisitor(ast.NodeVisitor):
         self.write('*')
         self.visit(node.value)
 
-    def visit_Repr(self, node):
-        # XXX: python 2.6 only
-        self.write('`')
-        self.visit(node.value)
-        self.write('`')
-
-    # Helper Nodes
-
     def visit_alias(self, node):
         self.write(node.name)
         if node.asname is not None:
@@ -608,6 +555,22 @@ class SourceGeneratorNodeVisitor(ast.NodeVisitor):
     def visit_arg(self, node):
         self.write(node.arg)
 
+    def visit_Print(self, node):
+        self.newline(node)
+        self.write('print ')
+        want_comma = False
+        if node.dest is not None:
+            self.write('>> ')
+            self.visit(node.dest)
+            want_comma = True
+        for value in node.values:
+            if want_comma:
+                self.write(', ')
+            self.visit(value)
+            want_comma = True
+        if not node.nl:
+            self.write(',')
+
     def visit_TryExcept(self, node):
         self.newline(node)
         self.write('try:')
@@ -623,13 +586,61 @@ class SourceGeneratorNodeVisitor(ast.NodeVisitor):
         self.write('finally:')
         self.body(node.finalbody)
 
+    def visit_Try(self, node):
+        self.newline(node)
+        self.write('try:')
+        self.body(node.body)
+        for handler in node.handlers:
+            self.visit(handler)
+        if node.finalbody:
+            self.newline(node)
+            self.write('finally:')
+            self.body(node.finalbody)
+
     def visit_With(self, node):
         self.newline(node)
         self.write('with ')
-        self.visit(node.context_expr)
-        if node.optional_vars is not None:
-            self.write(' as ')
-            self.visit(node.optional_vars)
+        if hasattr(node, 'items'):
+            for with_item in node.items:
+                self.visit(with_item.context_expr)
+                if with_item.optional_vars is not None:
+                    self.write(' as ')
+                    self.visit(with_item.optional_vars)
+                if with_item != node.items[-1]:
+                    self.write(', ')
+        else:
+            self.visit(node.context_expr)
+            if node.optional_vars is not None:
+                self.write(' as ')
+                self.visit(node.optional_vars)
         self.write(':')
         self.body(node.body)
+
+    def visit_Repr(self, node):
+        self.write('`')
+        self.visit(node.value)
+        self.write('`')
+
+    def visit_Raise(self, node):
+        self.newline(node)
+        self.write('raise')
+        if hasattr(node, 'exc') and node.exc is not None:
+            self.write(' ')
+            self.visit(node.exc)
+            if node.cause is not None:
+                self.write(' from ')
+                self.visit(node.cause)
+        elif hasattr(node, 'type') and node.type is not None:
+            self.write(' ')
+            self.visit(node.type)
+            if node.inst is not None:
+                self.write(', ')
+                self.visit(node.inst)
+            if node.tback is not None:
+                self.write(', ')
+                self.visit(node.tback)
+
+    def visit_YieldFrom(self, node):
+        self.write('yield from ')
+        self.visit(node.value)
 

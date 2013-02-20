@@ -1,5 +1,9 @@
-import unittest
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
 import ast
+import sys
 from astmonkey import visitors, transformers
 
 
@@ -52,7 +56,7 @@ class SourceGeneratorNodeVisitorTest(unittest.TestCase):
     def assert_code_equal(self, code):
         node = ast.parse(code)
         generated = visitors.to_source(node, indent_with='\t')
-        self.assertMultiLineEqual(code, generated)
+        self.assertEqual(code, generated)
 
     def test_import(self):
         self.assert_code_equal('import x')
@@ -72,6 +76,10 @@ class SourceGeneratorNodeVisitorTest(unittest.TestCase):
     def test_class_def(self):
         self.assert_code_equal('class X(A):\n\tpass')
 
+    @unittest.skipIf(sys.version_info < (3, 0), 'not supported Python version')
+    def test_class_def_with_metaclass(self):
+        self.assert_code_equal('class X(metaclass=A):\n\tpass')
+
     def test_if(self):
         self.assert_code_equal('if x:\n\tpass\nelif y:\n\tpass\nelse:\n\tpass')
 
@@ -81,8 +89,9 @@ class SourceGeneratorNodeVisitorTest(unittest.TestCase):
     def test_while(self):
         self.assert_code_equal('while x:\n\tpass\nelse:\n\tpass')
 
+    @unittest.skipIf(sys.version_info >= (3, 0), 'not supported Python version')
     def test_print(self):
-        self.assert_code_equal('print x')
+        self.assert_code_equal('print >> y, x')
 
     def test_delete(self):
         self.assert_code_equal('del x')
@@ -102,6 +111,10 @@ class SourceGeneratorNodeVisitorTest(unittest.TestCase):
     def test_raise(self):
         self.assert_code_equal('raise x')
 
+    @unittest.skipIf(sys.version_info < (3, 0), 'not supported Python version')
+    def test_raise_from(self):
+        self.assert_code_equal('raise x from y')
+
     def test_attribute(self):
         self.assert_code_equal('x.y')
 
@@ -120,6 +133,7 @@ class SourceGeneratorNodeVisitorTest(unittest.TestCase):
     def test_list(self):
         self.assert_code_equal('[1, 2]')
 
+    @unittest.skipIf(sys.version_info < (2, 7), 'not supported Python version')
     def test_set(self):
         self.assert_code_equal('{1, 2}')
 
@@ -128,9 +142,6 @@ class SourceGeneratorNodeVisitorTest(unittest.TestCase):
 
     def test_bin_op(self):
         self.assert_code_equal('x + y')
-
-    def test_bool_op(self):
-        self.assert_code_equal('(x and y)')
 
     def test_bool_op(self):
         self.assert_code_equal('(x and y)')
@@ -159,9 +170,11 @@ class SourceGeneratorNodeVisitorTest(unittest.TestCase):
     def test_generator_exp(self):
         self.assert_code_equal('(x for x in y)')
 
+    @unittest.skipIf(sys.version_info < (2, 7), 'not supported Python version')
     def test_set_comp(self):
         self.assert_code_equal('{x for x in y}')
 
+    @unittest.skipIf(sys.version_info < (2, 7), 'not supported Python version')
     def test_dict_comp(self):
         self.assert_code_equal('{x: y for x in y}')
 
@@ -176,4 +189,12 @@ class SourceGeneratorNodeVisitorTest(unittest.TestCase):
 
     def test_with(self):
         self.assert_code_equal('with x as y:\n\tpass')
+
+    @unittest.skipIf(sys.version_info < (3, 3), 'not supported Python version')
+    def test_yield_from(self):
+        self.assert_code_equal('def foo():\n\tyield from x')
+
+    @unittest.skipIf(sys.version_info >= (3, 0), 'not supported Python version')
+    def test_repr(self):
+        self.assert_code_equal('`x`')
 
