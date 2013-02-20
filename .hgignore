@@ -1,7 +1,8 @@
 syntax: glob
 
 *.pyc
-astmonkey.egg-info
+*.egg*
 .*.swp
 .*.swo
 .DS_Store
+.tox
