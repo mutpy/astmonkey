@@ -89,7 +89,8 @@ Example usage:
 
 This visitor allow AST to Python code generation. It was originally written by 
 Armin Ronacher (2008, license BSD) as ``codegen.py`` module. ``astmonkey`` version
-fixes few bugs and it has good code coverage.
+fixes few bugs and it has good code coverage. It also works with Python 2.6, 2.7, 
+3.1, 3.2 and 3.3.
 
 Example usage:
 
