@@ -198,3 +198,6 @@ class SourceGeneratorNodeVisitorTest(unittest.TestCase):
     def test_repr(self):
         self.assert_code_equal('`x`')
 
+    def test_empty_lines(self):
+        self.assert_code_equal('\n\n\nx')
+
