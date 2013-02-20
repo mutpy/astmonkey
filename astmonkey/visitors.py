@@ -608,7 +608,7 @@ class SourceGeneratorNodeVisitor(ast.NodeVisitor):
                     self.visit(with_item.optional_vars)
                 if with_item != node.items[-1]:
                     self.write(', ')
-        else:
+        elif hasattr(node, 'context_expr'):
             self.visit(node.context_expr)
             if node.optional_vars is not None:
                 self.write(' as ')
