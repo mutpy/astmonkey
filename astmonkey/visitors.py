@@ -472,7 +472,7 @@ class SourceGeneratorNodeVisitor(ast.NodeVisitor):
                 self.visit(node.step)
 
     def visit_ExtSlice(self, node):
-        for idx, item in node.dims:
+        for idx, item in enumerate(node.dims):
             if idx:
                 self.write(', ')
             self.visit(item)
@@ -483,6 +483,10 @@ class SourceGeneratorNodeVisitor(ast.NodeVisitor):
             self.write(' ')
             self.visit(node.value)
 
+    def visit_YieldFrom(self, node):
+        self.write('yield from ')
+        self.visit(node.value)
+
     def visit_Lambda(self, node):
         self.write('lambda ')
         self.signature(node.args)
@@ -490,7 +494,7 @@ class SourceGeneratorNodeVisitor(ast.NodeVisitor):
         self.visit(node.body)
 
     def visit_Ellipsis(self, node):
-        self.write('Ellipsis')
+        self.write('...')
 
     def generator_visit(left, right):
         def visit(self, node):
@@ -541,17 +545,6 @@ class SourceGeneratorNodeVisitor(ast.NodeVisitor):
                 self.write(' if ')
                 self.visit(if_)
 
-    def visit_ExceptHandler(self, node):
-        self.newline(node)
-        self.write('except')
-        if node.type is not None:
-            self.write(' ')
-            self.visit(node.type)
-            if node.name is not None:
-                self.write(' as ' + node.name)
-        self.write(':')
-        self.body(node.body)
-
     def visit_arg(self, node):
         self.write(node.arg)
 
@@ -597,6 +590,40 @@ class SourceGeneratorNodeVisitor(ast.NodeVisitor):
             self.write('finally:')
             self.body(node.finalbody)
 
+    def visit_ExceptHandler(self, node):
+        self.newline(node)
+        self.write('except')
+        if node.type is not None:
+            self.write(' ')
+            self.visit(node.type)
+            if node.name is not None:
+                self.write(' as ')
+                if isinstance(node.name, ast.AST):
+                    self.visit(node.name)
+                else:
+                    self.write(node.name)
+        self.write(':')
+        self.body(node.body)
+
+    def visit_Raise(self, node):
+        self.newline(node)
+        self.write('raise')
+        if hasattr(node, 'exc') and node.exc is not None:
+            self.write(' ')
+            self.visit(node.exc)
+            if node.cause is not None:
+                self.write(' from ')
+                self.visit(node.cause)
+        elif hasattr(node, 'type') and node.type is not None:
+            self.write(' ')
+            self.visit(node.type)
+            if node.inst is not None:
+                self.write(', ')
+                self.visit(node.inst)
+            if node.tback is not None:
+                self.write(', ')
+                self.visit(node.tback)
+
     def visit_With(self, node):
         self.newline(node)
         self.write('with ')
@@ -620,27 +647,4 @@ class SourceGeneratorNodeVisitor(ast.NodeVisitor):
         self.write('`')
         self.visit(node.value)
         self.write('`')
-
-    def visit_Raise(self, node):
-        self.newline(node)
-        self.write('raise')
-        if hasattr(node, 'exc') and node.exc is not None:
-            self.write(' ')
-            self.visit(node.exc)
-            if node.cause is not None:
-                self.write(' from ')
-                self.visit(node.cause)
-        elif hasattr(node, 'type') and node.type is not None:
-            self.write(' ')
-            self.visit(node.type)
-            if node.inst is not None:
-                self.write(', ')
-                self.visit(node.inst)
-            if node.tback is not None:
-                self.write(', ')
-                self.visit(node.tback)
-
-    def visit_YieldFrom(self, node):
-        self.write('yield from ')
-        self.visit(node.value)
 

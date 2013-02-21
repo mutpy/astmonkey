@@ -67,18 +67,24 @@ class SourceGeneratorNodeVisitorTest(unittest.TestCase):
     def test_assign(self):
         self.assert_code_equal('x = 1')
 
+    def test_assign_with_unpack(self):
+        self.assert_code_equal('(x, y) = z')
+
     def test_aug_assign(self):
         self.assert_code_equal('x += 1')
 
     def test_function_def(self):
-        self.assert_code_equal('def foo(x):\n\tpass')
+        self.assert_code_equal('def foo(x, y=1, *args, **kwargs):\n\tpass')
+
+    def test_decorator(self):
+        self.assert_code_equal('@x(y)\ndef foo():\n\tpass')
 
     def test_class_def(self):
-        self.assert_code_equal('class X(A):\n\tpass')
+        self.assert_code_equal('class X(A, B):\n\tpass')
 
     @unittest.skipIf(sys.version_info < (3, 0), 'not supported Python version')
     def test_class_def_with_metaclass(self):
-        self.assert_code_equal('class X(metaclass=A):\n\tpass')
+        self.assert_code_equal('class X(metaclass=A, *x, **y):\n\tpass')
 
     def test_if(self):
         self.assert_code_equal('if x:\n\tpass\nelif y:\n\tpass\nelse:\n\tpass')
@@ -91,10 +97,10 @@ class SourceGeneratorNodeVisitorTest(unittest.TestCase):
 
     @unittest.skipIf(sys.version_info >= (3, 0), 'not supported Python version')
     def test_print(self):
-        self.assert_code_equal('print >> y, x')
+        self.assert_code_equal('print >> y, x,')
 
     def test_delete(self):
-        self.assert_code_equal('del x')
+        self.assert_code_equal('del x, y')
 
     def test_global(self):
         self.assert_code_equal('global x, y')
@@ -110,6 +116,10 @@ class SourceGeneratorNodeVisitorTest(unittest.TestCase):
 
     def test_raise(self):
         self.assert_code_equal('raise x')
+
+    @unittest.skipIf(sys.version_info >= (3, 0), 'not supported Python version')
+    def test_raise_with_msg_and_tb(self):
+        self.assert_code_equal('raise x, y, z')
 
     @unittest.skipIf(sys.version_info < (3, 0), 'not supported Python version')
     def test_raise_from(self):
@@ -138,7 +148,7 @@ class SourceGeneratorNodeVisitorTest(unittest.TestCase):
         self.assert_code_equal('{1, 2}')
 
     def test_dict(self):
-        self.assert_code_equal('{1: 2}')
+        self.assert_code_equal('{1: 2, 3: 4}')
 
     def test_bin_op(self):
         self.assert_code_equal('x + y')
@@ -158,6 +168,9 @@ class SourceGeneratorNodeVisitorTest(unittest.TestCase):
     def test_slice(self):
         self.assert_code_equal('x[y:z:q]')
 
+    def test_extended_slice(self):
+        self.assert_code_equal('x[1:2, 3:4]')
+
     def test_yield(self):
         self.assert_code_equal('def foo(x):\n\tyield x')
 
@@ -165,24 +178,24 @@ class SourceGeneratorNodeVisitorTest(unittest.TestCase):
         self.assert_code_equal('lambda x: x')
 
     def test_list_comp(self):
-        self.assert_code_equal('[x for x in y]')
+        self.assert_code_equal('[x for x in y if x]')
 
     def test_generator_exp(self):
-        self.assert_code_equal('(x for x in y)')
+        self.assert_code_equal('(x for x in y if x)')
 
     @unittest.skipIf(sys.version_info < (2, 7), 'not supported Python version')
     def test_set_comp(self):
-        self.assert_code_equal('{x for x in y}')
+        self.assert_code_equal('{x for x in y if x}')
 
     @unittest.skipIf(sys.version_info < (2, 7), 'not supported Python version')
     def test_dict_comp(self):
-        self.assert_code_equal('{x: y for x in y}')
+        self.assert_code_equal('{x: y for x in y if x}')
 
     def test_if_exp(self):
         self.assert_code_equal('x if y else z')
 
     def test_try_except(self):
-        self.assert_code_equal('try:\n\tpass\nexcept:\n\tpass')
+        self.assert_code_equal('try:\n\tpass\nexcept X as x:\n\tpass')
 
     def test_try_finally(self):
         self.assert_code_equal('try:\n\tpass\nfinally:\n\tpass')
@@ -200,4 +213,22 @@ class SourceGeneratorNodeVisitorTest(unittest.TestCase):
 
     def test_empty_lines(self):
         self.assert_code_equal('\n\n\nx')
+
+    @unittest.skipIf(sys.version_info < (3, 0), 'not supported Python version')
+    def test_nonlocal(self):
+        self.assert_code_equal('def foo(x, y):\n\tdef bar():\n\t\tnonlocal x, y')
+
+    @unittest.skipIf(sys.version_info < (3, 0), 'not supported Python version')
+    def test_bytes(self):
+        self.assert_code_equal("b'x'")
+
+    def test_ellipsis(self):
+        self.assert_code_equal('x[...]')
+
+    @unittest.skipIf(sys.version_info < (3, 0), 'not supported Python version')
+    def test_starred(self):
+        self.assert_code_equal('*x = y')
+
+    def test_alias(self):
+        self.assert_code_equal('import x as y')
 
