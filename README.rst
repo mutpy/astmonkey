@@ -6,7 +6,7 @@ astmonkey
 Installation
 ------------
 
-You can install `astmonkey` from PyPI:
+You can install ``astmonkey`` from PyPI:
 
 ::
 
@@ -65,7 +65,7 @@ Example usage:
 
     visitor.graph.write_png('graph.png')
 
-Produced ``graph.png`` (you need to have installed `graphviz` binaries if you want generate 
+Produced ``graph.png`` (you need to have installed ``graphviz`` binaries if you want generate 
 images):
 
 .. image:: https://bitbucket.org/khalas/astmonkey/raw/default/examples/graph.png
