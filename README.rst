@@ -1,7 +1,7 @@
 astmonkey
 ---------
 
-``astmonkey`` is a set of tools to work with Python AST.
+``astmonkey`` is a set of tools to play with Python AST.
 
 Installation
 ------------
