@@ -6,7 +6,13 @@ astmonkey
 Installation
 ------------
 
-The easiest way to install ``astmonkey`` is clone this repository and use ``setup.py``:
+You can install `astmonkey` from PyPI:
+
+::
+
+    $ pip install astmonkey
+
+If you want to have latest changes you should clone this repository and use ``setup.py``:
 
 ::
 
@@ -42,8 +48,8 @@ Example usage:
 ---------------------------------------
 
 This visitor creates Graphviz graph from Python AST (via ``pydot``). Before you use 
-``astmonkey.visitors.GraphNodeVisitor`` you need to add parents links to tree nodes 
-(with ``astmonkey.transformers.ParentNodeTransformer``).
+``GraphNodeVisitor`` you need to add parents links to tree nodes (with 
+``ParentNodeTransformer``).
 
 Example usage:
 
@@ -59,30 +65,10 @@ Example usage:
 
     visitor.graph.write_png('graph.png')
 
-Produced ``graph.png``:
+Produced ``graph.png`` (you need to have installed `graphviz` binaries if you want generate 
+images):
 
 .. image:: https://bitbucket.org/khalas/astmonkey/raw/default/examples/graph.png
-
-``astmonkey.utils.is_docstring``
---------------------------------
-
-This routine checks if target node is a docstring. Before you use 
-``astmonkey.utils.is_docstring`` you need to add parents links to tree nodes 
-(with ``astmonkey.transformers.ParentNodeTransformer``).
-
-Example usage:
-
-::
-
-    import ast
-    from astmonkey import utils, transformers
-
-    node = ast.parse('def foo(x):\n\t"""doc"""')
-    node = transformers.ParentNodeTransformer().visit(node)
-
-    docstring_node = node.body[0].body[0].value
-    assert(not utils.is_docstring(node))
-    assert(utils.is_docstring(docstring_node))
 
 ``astmonkey.visitors.SourceGeneratorNodeVisitor``
 -------------------------------------------------
@@ -104,6 +90,27 @@ Example usage:
     generated_code = visitors.to_source(node) 
 
     assert(code == generated_code)
+
+``astmonkey.utils.is_docstring``
+--------------------------------
+
+This routine checks if target node is a docstring. Before you use 
+``is_docstring`` you need to add parents links to tree nodes (with 
+``ParentNodeTransformer``).
+
+Example usage:
+
+::
+
+    import ast
+    from astmonkey import utils, transformers
+
+    node = ast.parse('def foo(x):\n\t"""doc"""')
+    node = transformers.ParentNodeTransformer().visit(node)
+
+    docstring_node = node.body[0].body[0].value
+    assert(not utils.is_docstring(node))
+    assert(utils.is_docstring(docstring_node))
 
 
 License
