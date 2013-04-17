@@ -229,8 +229,8 @@ class SourceGeneratorNodeVisitor(ast.NodeVisitor):
         self.write('from {0} import {1}'.format(node.module, ', '.join(imports)))
 
     def visit_Import(self, node):
-        self.newline(node)
         for item in node.names:
+            self.newline(node)
             self.write('import ')
             self.visit(item)
 
