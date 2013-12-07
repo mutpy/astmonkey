@@ -20,7 +20,7 @@ If you want to have latest changes you should clone this repository and use ``se
 
 ::
 
-    $ hg clone https://khalas@bitbucket.org/khalas/astmonkey
+    $ git clone https://github.com/konradhalas/astmonkey.git
     $ cd astmonkey
     $ python setup.py install
 
