@@ -13,11 +13,11 @@ if sys.version_info < (2, 7):
 
 setup(
     name='astmonkey',
-    version='0.1.0',
+    version='0.1.1',
     description='astmonkey is a set of tools to play with Python AST.',
     author='Konrad Hałas',
     author_email='halas.konrad@gmail.com',
-    url='https://bitbucket.org/khalas/astmonkey',
+    url='https://github.com/konradhalas/astmonkey'
     packages=['astmonkey'],
     test_suite='astmonkey.tests',
     install_requires=['pydot'],
