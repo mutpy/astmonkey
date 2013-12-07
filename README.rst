@@ -1,5 +1,9 @@
+=========
 astmonkey
----------
+=========
+
+.. image:: https://travis-ci.org/konradhalas/astmonkey.png
+    :target: https://travis-ci.org/konradhalas/astmonkey
 
 ``astmonkey`` is a set of tools to play with Python AST.
 
