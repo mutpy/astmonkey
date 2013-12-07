@@ -24,8 +24,8 @@ If you want to have latest changes you should clone this repository and use ``se
     $ cd astmonkey
     $ python setup.py install
 
-``astmonkey.transformers.ParentNodeTransformer``
-------------------------------------------------
+transformers.ParentNodeTransformer
+----------------------------------
 
 This transformer adds few fields to every node in AST:
 
@@ -48,8 +48,8 @@ Example usage:
     assert(node.body[0].parent_field == 'body')
     assert(node.body[0].parent_field_index == 0)
 
-``astmonkey.visitors.GraphNodeVisitor``
----------------------------------------
+visitors.GraphNodeVisitor
+-------------------------
 
 This visitor creates Graphviz graph from Python AST (via ``pydot``). Before you use 
 ``GraphNodeVisitor`` you need to add parents links to tree nodes (with 
@@ -74,8 +74,8 @@ images):
 
 .. image:: https://bitbucket.org/khalas/astmonkey/raw/default/examples/graph.png
 
-``astmonkey.visitors.SourceGeneratorNodeVisitor``
--------------------------------------------------
+visitors.SourceGeneratorNodeVisitor
+-----------------------------------
 
 This visitor allow AST to Python code generation. It was originally written by 
 Armin Ronacher (2008, license BSD) as ``codegen.py`` module. ``astmonkey`` version
@@ -95,8 +95,8 @@ Example usage:
 
     assert(code == generated_code)
 
-``astmonkey.utils.is_docstring``
---------------------------------
+utils.is_docstring
+------------------
 
 This routine checks if target node is a docstring. Before you use 
 ``is_docstring`` you need to add parents links to tree nodes (with 
