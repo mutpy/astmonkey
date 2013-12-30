@@ -226,7 +226,7 @@ class SourceGeneratorNodeVisitor(ast.NodeVisitor):
                 name += ' as ' + alias.asname
             imports.append(name)
 
-        self.write('from {0} import {1}'.format(node.module, ', '.join(imports)))
+        self.write('from {0}{1} import {2}'.format('.' * node.level, node.module or '', ', '.join(imports)))
 
     def visit_Import(self, node):
         for item in node.names:

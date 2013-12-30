@@ -64,6 +64,15 @@ class SourceGeneratorNodeVisitorTest(unittest.TestCase):
     def test_import_from(self):
         self.assert_code_equal('from x import y as z, q as p')
 
+    def test_import_from_relative_level_1(self):
+        self.assert_code_equal("from . import x")
+
+    def test_import_from_relative_level_1_with_source_name(self):
+        self.assert_code_equal("from .y import x")
+
+    def test_import_from_relative_level_2(self):
+        self.assert_code_equal("from .. import x")
+
     def test_assign(self):
         self.assert_code_equal('x = 1')
 
