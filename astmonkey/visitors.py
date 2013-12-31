@@ -648,3 +648,10 @@ class SourceGeneratorNodeVisitor(ast.NodeVisitor):
         self.visit(node.value)
         self.write('`')
 
+    def visit_Assert(self, node):
+        self.newline(node)
+        self.write('assert ')
+        self.visit(node.test)
+        if node.msg:
+            self.write(', ')
+            self.visit(node.msg)

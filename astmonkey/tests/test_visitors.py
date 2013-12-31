@@ -241,3 +241,9 @@ class SourceGeneratorNodeVisitorTest(unittest.TestCase):
     def test_alias(self):
         self.assert_code_equal('import x as y')
 
+    def test_assert_with_message(self):
+        self.assert_code_equal("assert True, 'message'")
+
+    def test_assert_without_message(self):
+        self.assert_code_equal("assert True")
+
