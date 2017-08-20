@@ -1,5 +1,7 @@
 import ast
 
+import sys
+
 
 def is_docstring(node):
     if node.parent is None or node.parent.parent is None:
@@ -11,3 +13,12 @@ def is_docstring(node):
         def_node.body[0].value == node
     )
 
+def get_by_python_version(classes, python_version=sys.version_info):
+    result = None
+    for cls in classes:
+        if cls.__python_version__ <= python_version:
+            if not result or cls.__python_version__ > result.__python_version__:
+                result = cls
+    if not result:
+        raise NotImplementedError('astmonkey does not support Python %s.' % sys.version)
+    return result
