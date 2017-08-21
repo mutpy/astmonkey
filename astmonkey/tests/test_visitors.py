@@ -88,11 +88,11 @@ class TestSourceGeneratorNodeVisitor(object):
         FUNC_DEF + EOL + INDENT + PASS,
         'def f(x, y=1, *args, **kwargs):' + EOL + INDENT + PASS,
         'def f(a, b=\'c\', *args, **kwargs):' + EOL + INDENT + PASS,
-        'def f():' + EOL + INDENT + 'return',
-        'def f():' + EOL + INDENT + 'return 5',
+        FUNC_DEF + EOL + INDENT + 'return',
+        FUNC_DEF + EOL + INDENT + 'return 5',
         # yield
-        'def f():' + EOL + INDENT + 'yield',
-        'def f():' + EOL + INDENT + 'yield 5',
+        FUNC_DEF + EOL + INDENT + 'yield',
+        FUNC_DEF + EOL + INDENT + 'yield 5',
         # importing
         'import x',
         'import x as y',
@@ -236,17 +236,17 @@ class TestSourceGeneratorNodeVisitor(object):
             # with multiple
             'with x, y:' + EOL + INDENT + 'pass',
             # yield from
-            'def f():' + EOL + INDENT + 'yield from x',
+            FUNC_DEF + EOL + INDENT + 'yield from x',
         ]
 
     if utils.check_version(from_inclusive=(3, 5)):
         testdata += [
-            # unpack dist into dict
+            # unpack into dict
             '{**kwargs}',
             # async/await
-            'async def f():' + EOL + INDENT + PASS,
-            'async def f():' + EOL + INDENT + 'async for line in reader:' + EOL + INDENT + INDENT + PASS,
-            'async def f():' + EOL + INDENT + 'await asyncio.sleep(1)',
+            'async ' + FUNC_DEF + EOL + INDENT + PASS,
+            'async ' + FUNC_DEF + EOL + INDENT + 'async for line in reader:' + EOL + INDENT + INDENT + PASS,
+            'async ' + FUNC_DEF + EOL + INDENT + 'await asyncio.sleep(1)',
         ]
 
     if utils.check_version(from_inclusive=(3, 6)):
