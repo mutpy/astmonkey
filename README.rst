@@ -71,7 +71,7 @@ Example usage:
 Produced ``graph.png`` (you need to have installed ``graphviz`` binaries if you want generate 
 images):
 
-.. image:: https://bitbucket.org/khalas/astmonkey/raw/default/examples/graph.png
+.. image:: examples/graph.png
 
 visitors.SourceGeneratorNodeVisitor
 -----------------------------------
