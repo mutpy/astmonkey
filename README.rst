@@ -135,5 +135,5 @@ limitations under the License.
 
 ..  |Python Versions| image:: https://img.shields.io/pypi/pyversions/astmonkey.svg
     :target: https://github.com/mutpy/astmonkey
-..  |Build Status| image:: https://travis-ci.org/konradhalas/astmonkey.png
-    :target: https://travis-ci.org/konradhalas/astmonkey
+..  |Build Status| image:: https://travis-ci.org/mutpy/astmonkey.png
+    :target: https://travis-ci.org/mutpy/astmonkey
