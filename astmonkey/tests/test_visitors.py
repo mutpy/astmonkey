@@ -227,6 +227,8 @@ class TestSourceGeneratorNodeVisitor(object):
             'class X(Y, metaclass=Z):' + EOL + INDENT + 'pass',
             # type hinting
             'def f(a: str) -> str:' + EOL + INDENT + PASS,
+            # extended iterable unpacking
+            '(x, *y) = z',
         ]
 
     if utils.check_version(from_inclusive=(3, 3)):
