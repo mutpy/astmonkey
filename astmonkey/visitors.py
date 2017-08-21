@@ -655,3 +655,24 @@ class SourceGeneratorNodeVisitor(ast.NodeVisitor):
         if node.msg:
             self.write(', ')
             self.visit(node.msg)
+
+
+class EdgeGraphNodeVisitor(GraphNodeVisitor):
+
+    """Simple point-edge-point graphviz representation of the AST."""
+
+    def __init__(self):
+        super(self.__class__, self).__init__()
+        self.graph.set_node_defaults(shape='point')
+
+    def _dot_graph_kwargs(self):
+        return {}
+
+    def _dot_node_kwargs(self, node):
+        return {}
+
+    def _dot_edge(self, node):
+        return pydot.Edge(id(node.parent), id(node))
+
+    def _dot_node(self, node):
+        return pydot.Node(id(node), **self._dot_node_kwargs(node))
