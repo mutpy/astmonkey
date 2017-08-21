@@ -19,7 +19,7 @@ If you want to have latest changes you should clone this repository and use ``se
 
 ::
 
-    $ git clone https://github.com/konradhalas/astmonkey.git
+    $ git clone https://github.com/mutpy/astmonkey.git
     $ cd astmonkey
     $ python setup.py install
 
