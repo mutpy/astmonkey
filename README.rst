@@ -2,8 +2,7 @@
 astmonkey
 =========
 
-.. image:: https://travis-ci.org/konradhalas/astmonkey.png
-    :target: https://travis-ci.org/konradhalas/astmonkey
+|Python Versions| |Build Status|
 
 ``astmonkey`` is a set of tools to play with Python AST.
 
@@ -133,3 +132,8 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+
+..  |Python Versions| image:: https://img.shields.io/pypi/pyversions/astmonkey.svg
+    :target: https://github.com/mutpy/astmonkey
+..  |Build Status| image:: https://travis-ci.org/konradhalas/astmonkey.png
+    :target: https://travis-ci.org/konradhalas/astmonkey
