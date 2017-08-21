@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 from setuptools import setup
 
+with open('README.rst') as f:
+    long_description = f.read()
+
 setup(
     name='astmonkey',
     version='0.2.0',
@@ -10,6 +13,7 @@ setup(
     url='https://github.com/mutpy/astmonkey',
     packages=['astmonkey'],
     install_requires=['pydot'],
+    long_description=long_description,
     classifiers=[
         'Intended Audience :: Developers',
         'Programming Language :: Python :: 2.6',
@@ -21,4 +25,3 @@ setup(
         'License :: OSI Approved :: Apache Software License'
     ]
 )
-
