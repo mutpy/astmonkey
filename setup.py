@@ -6,7 +6,7 @@ with open('README.rst') as f:
 
 setup(
     name='astmonkey',
-    version='0.2.0',
+    version='0.2.1',
     description='astmonkey is a set of tools to play with Python AST.',
     author='Konrad Hałas',
     author_email='halas.konrad@gmail.com',
