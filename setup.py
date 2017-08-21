@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name='astmonkey',
-    version='0.1.1',
+    version='0.2.0',
     description='astmonkey is a set of tools to play with Python AST.',
     author='Konrad Hałas',
     author_email='halas.konrad@gmail.com',
