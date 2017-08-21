@@ -37,7 +37,7 @@ class GraphNodeVisitor(ast.NodeVisitor):
 
     def _dot_node_kwargs(self, node):
         return {
-            'shape':    'box',
+            'shape': 'box',
             'fontname': 'Curier'
         }
 
@@ -62,42 +62,42 @@ class GraphNodeVisitor(ast.NodeVisitor):
 
 BOOLOP_SYMBOLS = {
     ast.And: 'and',
-    ast.Or:  'or'
+    ast.Or: 'or'
 }
 
 BINOP_SYMBOLS = {
-    ast.Add:      '+',
-    ast.Sub:      '-',
-    ast.Mult:     '*',
-    ast.Div:      '/',
+    ast.Add: '+',
+    ast.Sub: '-',
+    ast.Mult: '*',
+    ast.Div: '/',
     ast.FloorDiv: '//',
-    ast.Mod:      '%',
-    ast.LShift:   '<<',
-    ast.RShift:   '>>',
-    ast.BitOr:    '|',
-    ast.BitAnd:   '&',
-    ast.BitXor:   '^',
-    ast.Pow:      '**'
+    ast.Mod: '%',
+    ast.LShift: '<<',
+    ast.RShift: '>>',
+    ast.BitOr: '|',
+    ast.BitAnd: '&',
+    ast.BitXor: '^',
+    ast.Pow: '**'
 }
 
 CMPOP_SYMBOLS = {
-    ast.Eq:    '==',
-    ast.Gt:    '>',
-    ast.GtE:   '>=',
-    ast.In:    'in',
-    ast.Is:    'is',
+    ast.Eq: '==',
+    ast.Gt: '>',
+    ast.GtE: '>=',
+    ast.In: 'in',
+    ast.Is: 'is',
     ast.IsNot: 'is not',
-    ast.Lt:    '<',
-    ast.LtE:   '<=',
+    ast.Lt: '<',
+    ast.LtE: '<=',
     ast.NotEq: '!=',
     ast.NotIn: 'not in'
 }
 
 UNARYOP_SYMBOLS = {
     ast.Invert: '~',
-    ast.Not:    'not',
-    ast.UAdd:   '+',
-    ast.USub:   '-'
+    ast.Not: 'not',
+    ast.UAdd: '+',
+    ast.USub: '-'
 }
 
 ALL_SYMBOLS = {}
@@ -179,6 +179,9 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
             self.write('else:')
             self.body(node.orelse)
 
+    def docstring(self, node):
+        self.write('"""{0}"""'.format(node.s))
+
     def signature(self, node):
         want_comma = []
 
@@ -243,8 +246,11 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
             self.visit(item)
 
     def visit_Expr(self, node):
-        self.newline(node)
-        self.generic_visit(node)
+        if isinstance(node.value, ast.Str):
+            self.docstring(node.value)
+        else:
+            self.newline(node)
+            self.generic_visit(node)
 
     def visit_FunctionDef(self, node):
         self.decorators(node)

@@ -64,6 +64,8 @@ class TestSourceGeneratorNodeVisitor(object):
     EMPTY_CLASS = CLASS_DEF + EOL + INDENT + PASS
     FUNC_DEF = 'def f():'
     EMPTY_FUNC = FUNC_DEF + EOL + INDENT + PASS
+    SINGLE_LINE_DOCSTRING = '""" This is a single line docstring."""'
+    MULTI_LINE_DOCSTRING = '""" This is a multi line docstring.' + EOL + EOL + 'Further description...' + EOL + '"""'
 
     testdata = [
         # assign
@@ -184,9 +186,14 @@ class TestSourceGeneratorNodeVisitor(object):
         # ellipsis
         'x[...]',
         # str
-        "'x'",
+        "x = 'y'",
         # num
         '1',
+        # docstring
+        SINGLE_LINE_DOCSTRING,
+        MULTI_LINE_DOCSTRING,
+        CLASS_DEF + EOL + INDENT + MULTI_LINE_DOCSTRING,
+        FUNC_DEF + EOL + INDENT + MULTI_LINE_DOCSTRING,
     ]
 
     if utils.check_version(from_inclusive=(2, 7)):
@@ -222,7 +229,7 @@ class TestSourceGeneratorNodeVisitor(object):
             # byte string
             'b\'byte_string\'',
             # unicode string
-            '\'äöüß\'',
+            'x = \'äöüß\'',
             # metaclass
             'class X(Y, metaclass=Z):' + EOL + INDENT + 'pass',
             # type hinting
