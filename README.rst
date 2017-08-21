@@ -19,7 +19,7 @@ If you want to have latest changes you should clone this repository and use ``se
 
 ::
 
-    $ git clone https://github.com/konradhalas/astmonkey.git
+    $ git clone https://github.com/mutpy/astmonkey.git
     $ cd astmonkey
     $ python setup.py install
 
@@ -76,10 +76,9 @@ images):
 visitors.SourceGeneratorNodeVisitor
 -----------------------------------
 
-This visitor allow AST to Python code generation. It was originally written by 
+This visitor allow AST to Python code generation. It was originally written by
 Armin Ronacher (2008, license BSD) as ``codegen.py`` module. ``astmonkey`` version
-fixes few bugs and it has good code coverage. It also works with Python 2.6, 2.7, 
-3.1, 3.2 and 3.3.
+fixes few bugs and it has good code coverage.
 
 Example usage:
 
