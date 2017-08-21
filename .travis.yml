@@ -11,3 +11,10 @@ install:
   - pip install tox-travis
 script:
   - tox
+deploy:
+  provider: pypi
+  user: khalas
+  password:
+    secure: "rrvTrcLSuZvIeMxP2A84WYB4I1Aea6ymGKuFInSjxReKhG+S9hmSuMyzZASbpGQftZUScCPI4SP3jJQMnEnUJC2jDp+lAjakxDS/E6NMtsIq2vboFG7sejo5LLFCk0vvFjlzZWagYohbMDdqiRT2JEqVnkfk5t2dinA2mgCucDg="
+  on:
+    tags: true
