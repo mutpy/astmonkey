@@ -281,13 +281,13 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
     def function_definition(self, node, prefixes=()):
         self.decorators(node)
         self.newline(node)
-        self.function_prefixes(prefixes)
+        self._prefixes(prefixes)
         self.write('def %s(' % node.name, node)
         self.signature(node.args)
         self.write('):')
         self.body(node.body)
 
-    def function_prefixes(self, prefixes):
+    def _prefixes(self, prefixes):
         self.write(' '.join(prefixes))
         if prefixes:
             self.write(' ')
@@ -333,7 +333,11 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
                 break
 
     def visit_For(self, node):
+        self.for_loop(node)
+
+    def for_loop(self, node, prefixes=()):
         self.newline(node)
+        self._prefixes(prefixes)
         self.write('for ')
         self.visit(node.target)
         self.write(' in ')
@@ -818,13 +822,7 @@ class SourceGeneratorNodeVisitorPython35(SourceGeneratorNodeVisitorPython34):
         self.function_definition(node, prefixes=['async'])
 
     def visit_AsyncFor(self, node):
-        self.newline(node)
-        self.write('async for ')
-        self.visit(node.target)
-        self.write(' in ')
-        self.visit(node.iter)
-        self.write(':')
-        self.body_or_else(node)
+        self.for_loop(node, prefixes=['async'])
 
     def visit_Await(self, node):
         self.write('await ')
