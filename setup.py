@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 from setuptools import setup
 
+import astmonkey
+
 with open('README.rst') as f:
     long_description = f.read()
 
 setup(
     name='astmonkey',
-    version='0.2.1',
+    version=astmonkey.__version__,
     description='astmonkey is a set of tools to play with Python AST.',
     author='Konrad Hałas',
     author_email='halas.konrad@gmail.com',
