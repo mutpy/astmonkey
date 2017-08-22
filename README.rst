@@ -2,7 +2,7 @@
 astmonkey
 =========
 
-|Python Versions| |Build Status|
+|Python Versions| |Build Status| |Coverage Status| |Code Climate|
 
 ``astmonkey`` is a set of tools to play with Python AST.
 
@@ -136,3 +136,7 @@ limitations under the License.
     :target: https://github.com/mutpy/astmonkey
 ..  |Build Status| image:: https://travis-ci.org/mutpy/astmonkey.png
     :target: https://travis-ci.org/mutpy/astmonkey
+.. |Coverage Status| image:: https://coveralls.io/repos/github/mutpy/astmonkey/badge.svg?branch=master
+   :target: https://coveralls.io/github/mutpy/astmonkey?branch=master
+.. |Code Climate| image:: https://codeclimate.com/github/mutpy/astmonkey/badges/gpa.svg
+   :target: https://codeclimate.com/github/mutpy/astmonkey
