@@ -26,14 +26,17 @@ class GraphNodeVisitor(ast.NodeVisitor):
         fields_labels = []
         for field, value in ast.iter_fields(node):
             if not isinstance(value, list):
-                value_label = None
-                if not isinstance(value, ast.AST):
-                    value_label = repr(value)
-                elif len(value.parents) > 1:
-                    value_label = self._dot_node_label(value)
+                value_label = self._dot_node_value_label(value)
                 if value_label:
                     fields_labels.append('{0}={1}'.format(field, value_label))
         return 'ast.{0}({1})'.format(node.__class__.__name__, ', '.join(fields_labels))
+
+    def _dot_node_value_label(self, value):
+        if not isinstance(value, ast.AST):
+            return repr(value)
+        elif len(value.parents) > 1:
+            return self._dot_node_label(value)
+        return None
 
     def _dot_node_kwargs(self, node):
         return {
@@ -149,17 +152,21 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
 
     def correct_line_number(self, node):
         if self.new_line:
-            if self.result:
-                self.result.append('\n')
-            self.result.append(self.indent_with * self.indentation)
-            self.new_line = False
-
+            self.write_newline()
         if node and self._is_node_args_valid(node, 'lineno'):
-            lines = len("".join(self.result).split('\n')) if self.result else 0
-            line_diff = node.lineno - lines
+            self.add_missing_lines(node)
 
-            if line_diff:
-                self.result.append(('\n' + (self.indent_with * self.indentation)) * line_diff)
+    def add_missing_lines(self, node):
+        lines = len("".join(self.result).split('\n')) if self.result else 0
+        line_diff = node.lineno - lines
+        if line_diff:
+            [self.write_newline() for _ in range(line_diff)]
+
+    def write_newline(self):
+        if self.result:
+            self.result.append('\n')
+        self.result.append(self.indent_with * self.indentation)
+        self.new_line = False
 
     def newline(self, node=None):
         self.new_line = True
@@ -193,17 +200,26 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
 
         padding = [None] * (len(node.args) - len(node.defaults))
         for arg, default in zip(node.args, padding + node.defaults):
-            write_comma()
-            self.visit(arg)
-            if default is not None:
-                self.write('=')
-                self.visit(default)
-        if node.vararg is not None:
-            write_comma()
-            self.write('*' + node.vararg)
+            self.signature_arg(arg, default, write_comma)
+        self.signature_vararg(node, write_comma)
+        self.signature_kwarg(node, write_comma)
+
+    def signature_kwarg(self, node, write_comma):
         if node.kwarg is not None:
             write_comma()
             self.write('**' + node.kwarg)
+
+    def signature_vararg(self, node, write_comma):
+        if node.vararg is not None:
+            write_comma()
+            self.write('*' + node.vararg)
+
+    def signature_arg(self, arg, default, write_comma):
+        write_comma()
+        self.visit(arg)
+        if default is not None:
+            self.write('=')
+            self.visit(default)
 
     def decorators(self, node):
         for decorator in node.decorator_list:
@@ -252,13 +268,29 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
             self.newline(node)
             self.generic_visit(node)
 
+    def visit_keyword(self, node):
+        if self._is_node_args_valid(node, 'arg'):
+            self.write(node.arg + '=')
+        else:
+            self.write('**')
+        self.visit(node.value)
+
     def visit_FunctionDef(self, node):
+        self.function_definition(node)
+
+    def function_definition(self, node, prefixes=()):
         self.decorators(node)
         self.newline(node)
+        self.function_prefixes(prefixes)
         self.write('def %s(' % node.name, node)
         self.signature(node.args)
         self.write('):')
         self.body(node.body)
+
+    def function_prefixes(self, prefixes):
+        self.write(' '.join(prefixes))
+        if prefixes:
+            self.write(' ')
 
     def visit_ClassDef(self, node):
         have_args = []
@@ -321,7 +353,6 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
         self.write('pass', node)
 
     def visit_Print(self, node):
-        # XXX: python 2.6 only
         self.newline(node)
         self.write('print ')
         want_comma = False
@@ -370,24 +401,29 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
         self.write('continue')
 
     def visit_Raise(self, node):
-        # XXX: Python 2.6 / 3.0 compatibility
         self.newline(node)
         self.write('raise')
         if self._is_node_args_valid(node, 'exc'):
-            self.write(' ')
-            self.visit(node.exc)
-            if node.cause is not None:
-                self.write(' from ')
-                self.visit(node.cause)
+            self.raise_exc(node)
         elif self._is_node_args_valid(node, 'type'):
-            self.write(' ')
-            self.visit(node.type)
-            if node.inst is not None:
-                self.write(', ')
-                self.visit(node.inst)
-            if node.tback is not None:
-                self.write(', ')
-                self.visit(node.tback)
+            self.raise_type(node)
+
+    def raise_type(self, node):
+        self.write(' ')
+        self.visit(node.type)
+        if node.inst is not None:
+            self.write(', ')
+            self.visit(node.inst)
+        if node.tback is not None:
+            self.write(', ')
+            self.visit(node.tback)
+
+    def raise_exc(self, node):
+        self.write(' ')
+        self.visit(node.exc)
+        if node.cause is not None:
+            self.write(' from ')
+            self.visit(node.cause)
 
     # Expressions
 
@@ -396,6 +432,12 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
         self.write('.' + node.attr)
 
     def visit_Call(self, node):
+        self.visit(node.func)
+        self.write('(')
+        self.call_signature(node)
+        self.write(')')
+
+    def call_signature(self, node):
         want_comma = []
 
         def write_comma():
@@ -403,19 +445,12 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
                 self.write(', ')
             else:
                 want_comma.append(True)
-
-        self.visit(node.func)
-        self.write('(')
         for arg in node.args:
             write_comma()
             self.visit(arg)
         for keyword in node.keywords:
             write_comma()
-            if keyword.arg:
-                self.write(keyword.arg + '=')
-            else:
-                self.write('**')
-            self.visit(keyword.value)
+            self.visit(keyword)
         if self._is_node_args_valid(node, 'starargs'):
             write_comma()
             self.write('*')
@@ -424,7 +459,6 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
             write_comma()
             self.write('**')
             self.visit(node.kwargs)
-        self.write(')')
 
     def visit_Name(self, node):
         self.write(node.id, node)
@@ -515,15 +549,24 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
         self.write(']')
 
     def visit_Slice(self, node):
-        if node.lower is not None:
-            self.visit(node.lower)
+        self.slice_lower(node)
         self.write(':')
-        if node.upper is not None:
-            self.visit(node.upper)
+        self.slice_upper(node)
+        self.slice_step(node)
+
+    def slice_step(self, node):
         if node.step is not None:
             self.write(':')
             if not (isinstance(node.step, ast.Name) and node.step.id == 'None'):
                 self.visit(node.step)
+
+    def slice_upper(self, node):
+        if node.upper is not None:
+            self.visit(node.upper)
+
+    def slice_lower(self, node):
+        if node.lower is not None:
+            self.visit(node.lower)
 
     def visit_ExtSlice(self, node):
         for idx, item in enumerate(node.dims):
@@ -582,7 +625,6 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
         self.visit(node.value)
 
     def visit_Repr(self, node):
-        # XXX: python 2.6 only
         self.write('`')
         self.visit(node.value)
         self.write('`')
@@ -664,13 +706,6 @@ class SourceGeneratorNodeVisitorPython27(SourceGeneratorNodeVisitorPython26):
 class SourceGeneratorNodeVisitorPython30(SourceGeneratorNodeVisitorPython27):
     __python_version__ = (3, 0)
 
-    def visit_keyword(self, node):
-        if self._is_node_args_valid(node, 'arg'):
-            self.write(node.arg + '=')
-        else:
-            self.write('**')
-        self.visit(node.value)
-
     def visit_ClassDef(self, node):
         have_args = []
 
@@ -694,31 +729,11 @@ class SourceGeneratorNodeVisitorPython30(SourceGeneratorNodeVisitorPython27):
         self.write(have_args and '):' or ':')
         self.body(node.body)
 
-    def signature(self, node):
-        want_comma = []
-
-        def write_comma():
-            if want_comma:
-                self.write(', ')
-            else:
-                want_comma.append(True)
-
-        padding = [None] * (len(node.args) - len(node.defaults))
-        for arg, default in zip(node.args, padding + node.defaults):
-            write_comma()
-            self.visit(arg)
-            if default is not None:
-                self.write('=')
-                self.visit(default)
-            if self._is_node_args_valid(arg, 'annotation'):
-                self.write(': ')
-                self.visit(arg.annotation)
-        if node.vararg is not None:
-            write_comma()
-            self.write('*' + node.vararg)
-        if node.kwarg is not None:
-            write_comma()
-            self.write('**' + node.kwarg)
+    def signature_arg(self, arg, default, write_comma):
+        super().signature_arg(arg, default, write_comma)
+        if self._is_node_args_valid(arg, 'annotation'):
+            self.write(': ')
+            self.visit(arg.annotation)
 
     def visit_FunctionDef(self, node):
         self.decorators(node)
@@ -785,28 +800,12 @@ class SourceGeneratorNodeVisitorPython34(SourceGeneratorNodeVisitorPython33):
         else:
             self.write(node.id, node)
 
-    def signature(self, node):
-        want_comma = []
-
-        def write_comma():
-            if want_comma:
-                self.write(', ')
-            else:
-                want_comma.append(True)
-
-        padding = [None] * (len(node.args) - len(node.defaults))
-        for arg, default in zip(node.args, padding + node.defaults):
-            write_comma()
-            self.visit(arg)
-            if default is not None:
-                self.write('=')
-                self.visit(default)
-            if self._is_node_args_valid(arg, 'annotation'):
-                self.write(': ')
-                self.visit(arg.annotation)
+    def signature_vararg(self, node, write_comma):
         if node.vararg is not None:
             write_comma()
             self.write('*' + node.vararg.arg)
+
+    def signature_kwarg(self, node, write_comma):
         if node.kwarg is not None:
             write_comma()
             self.write('**' + node.kwarg.arg)
@@ -816,12 +815,7 @@ class SourceGeneratorNodeVisitorPython35(SourceGeneratorNodeVisitorPython34):
     __python_version__ = (3, 5)
 
     def visit_AsyncFunctionDef(self, node):
-        self.decorators(node)
-        self.newline(node)
-        self.write('async def %s(' % node.name, node)
-        self.signature(node.args)
-        self.write('):')
-        self.body(node.body)
+        self.function_definition(node, prefixes=['async'])
 
     def visit_AsyncFor(self, node):
         self.newline(node)
@@ -837,7 +831,7 @@ class SourceGeneratorNodeVisitorPython35(SourceGeneratorNodeVisitorPython34):
         if self._is_node_args_valid(node, 'value'):
             self.visit(node.value)
 
-    def visit_Call(self, node):
+    def call_signature(self, node):
         want_comma = []
 
         def write_comma():
@@ -846,8 +840,6 @@ class SourceGeneratorNodeVisitorPython35(SourceGeneratorNodeVisitorPython34):
             else:
                 want_comma.append(True)
 
-        self.visit(node.func)
-        self.write('(')
         starargs = []
         kwargs = []
         for arg in node.args:
@@ -859,8 +851,7 @@ class SourceGeneratorNodeVisitorPython35(SourceGeneratorNodeVisitorPython34):
         for keyword in node.keywords:
             if keyword.arg:
                 write_comma()
-                self.write(keyword.arg + '=')
-                self.visit(keyword.value)
+                self.visit(keyword)
             else:
                 kwargs.append(keyword)
         for stararg in starargs:
@@ -869,7 +860,6 @@ class SourceGeneratorNodeVisitorPython35(SourceGeneratorNodeVisitorPython34):
         for kwarg in kwargs:
             write_comma()
             self.visit(kwarg)
-        self.write(')')
 
 
 class SourceGeneratorNodeVisitorPython36(SourceGeneratorNodeVisitorPython35):
