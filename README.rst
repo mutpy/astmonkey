@@ -23,7 +23,7 @@ If you want to have latest changes you should clone this repository and use ``se
     $ cd astmonkey
     $ python setup.py install
 
-transformers.ParentNodeTransformer
+transformers.ParentChildNodeTransformer
 ----------------------------------
 
 This transformer adds few fields to every node in AST:
@@ -32,6 +32,7 @@ This transformer adds few fields to every node in AST:
 * ``parents`` - list of all parents (only ``ast.expr_context`` nodes have more than one parent node, in other causes this is one-element list),
 * ``parent_field`` - name of field in parent node including child node,
 * ``parent_field_index`` - parent node field index, if it is a list.
+* ``children`` - link to children nodes.
 
 Example usage:
 
@@ -41,18 +42,19 @@ Example usage:
     from astmonkey import transformers
 
     node = ast.parse('x = 1')
-    node = transformers.ParentNodeTransformer().visit(node)
+    node = transformers.ParentChildNodeTransformer().visit(node)
 
     assert(node == node.body[0].parent)
     assert(node.body[0].parent_field == 'body')
     assert(node.body[0].parent_field_index == 0)
+    assert(node.body[0] in node.children)
 
 visitors.GraphNodeVisitor
 -------------------------
 
 This visitor creates Graphviz graph from Python AST (via ``pydot``). Before you use 
 ``GraphNodeVisitor`` you need to add parents links to tree nodes (with 
-``ParentNodeTransformer``).
+``ParentChildNodeTransformer``).
 
 Example usage:
 
@@ -62,7 +64,7 @@ Example usage:
     from astmonkey import visitors, transformers
 
     node = ast.parse('def foo(x):\n\treturn x + 1')
-    node = transformers.ParentNodeTransformer().visit(node)
+    node = transformers.ParentChildNodeTransformer().visit(node)
     visitor = visitors.GraphNodeVisitor()
     visitor.visit(node)
 
@@ -98,7 +100,7 @@ utils.is_docstring
 
 This routine checks if target node is a docstring. Before you use 
 ``is_docstring`` you need to add parents links to tree nodes (with 
-``ParentNodeTransformer``).
+``ParentChildNodeTransformer``).
 
 Example usage:
 
@@ -108,7 +110,7 @@ Example usage:
     from astmonkey import utils, transformers
 
     node = ast.parse('def foo(x):\n\t"""doc"""')
-    node = transformers.ParentNodeTransformer().visit(node)
+    node = transformers.ParentChildNodeTransformer().visit(node)
 
     docstring_node = node.body[0].body[0].value
     assert(not utils.is_docstring(node))

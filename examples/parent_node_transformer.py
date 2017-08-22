@@ -2,7 +2,7 @@ import ast
 from astmonkey import transformers
 
 node = ast.parse('x = 1')
-node = transformers.ParentNodeTransformer().visit(node)
+node = transformers.ParentChildNodeTransformer().visit(node)
 
 assert(node == node.body[0].parent)
 assert(node.body[0].parent_field == 'body')

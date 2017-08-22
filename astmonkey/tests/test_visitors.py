@@ -17,21 +17,21 @@ class TestGraphNodeVisitor(object):
         return visitors.GraphNodeVisitor()
 
     def test_has_edge(self, visitor):
-        node = transformers.ParentNodeTransformer().visit(ast.parse('x = 1'))
+        node = transformers.ParentChildNodeTransformer().visit(ast.parse('x = 1'))
 
         visitor.visit(node)
 
         assert visitor.graph.get_edge(str(node), str(node.body[0]))
 
     def test_does_not_have_edge(self, visitor):
-        node = transformers.ParentNodeTransformer().visit(ast.parse('x = 1'))
+        node = transformers.ParentChildNodeTransformer().visit(ast.parse('x = 1'))
 
         visitor.visit(node)
 
         assert not visitor.graph.get_edge(str(node), str(node.body[0].value))
 
     def test_node_label(self, visitor):
-        node = transformers.ParentNodeTransformer().visit(ast.parse('x = 1'))
+        node = transformers.ParentChildNodeTransformer().visit(ast.parse('x = 1'))
 
         visitor.visit(node)
 
@@ -39,7 +39,7 @@ class TestGraphNodeVisitor(object):
         assert dot_node.get_label() == 'ast.Num(n=1)'
 
     def test_edge_label(self, visitor):
-        node = transformers.ParentNodeTransformer().visit(ast.parse('x = 1'))
+        node = transformers.ParentChildNodeTransformer().visit(ast.parse('x = 1'))
 
         visitor.visit(node)
 
@@ -47,7 +47,7 @@ class TestGraphNodeVisitor(object):
         assert dot_edge.get_label() == 'body[0]'
 
     def test_multi_parents_node_label(self, visitor):
-        node = transformers.ParentNodeTransformer().visit(ast.parse('x = 1\nx = 2'))
+        node = transformers.ParentChildNodeTransformer().visit(ast.parse('x = 1\nx = 2'))
 
         visitor.visit(node)
 
