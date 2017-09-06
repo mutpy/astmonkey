@@ -23,6 +23,26 @@ If you want to have latest changes you should clone this repository and use ``se
     $ cd astmonkey
     $ python setup.py install
 
+visitors.SourceGeneratorNodeVisitor
+-----------------------------------
+
+This visitor allow AST to Python code generation. It was originally written by
+Armin Ronacher (2008, license BSD) as ``codegen.py`` module. ``astmonkey`` version
+fixes few bugs and it has good code coverage.
+
+Example usage:
+
+::
+
+    import ast
+    from astmonkey import visitors
+
+    code = 'x = y + 1'
+    node = ast.parse(code)
+    generated_code = visitors.to_source(node)
+
+    assert(code == generated_code)
+
 transformers.ParentChildNodeTransformer
 ----------------------------------
 
@@ -74,26 +94,6 @@ Produced ``graph.png`` (you need to have installed ``graphviz`` binaries if you 
 images):
 
 .. image:: examples/graph.png
-
-visitors.SourceGeneratorNodeVisitor
------------------------------------
-
-This visitor allow AST to Python code generation. It was originally written by
-Armin Ronacher (2008, license BSD) as ``codegen.py`` module. ``astmonkey`` version
-fixes few bugs and it has good code coverage.
-
-Example usage:
-
-::
-
-    import ast
-    from astmonkey import visitors 
-    
-    code = 'x = y + 1'
-    node = ast.parse(code)
-    generated_code = visitors.to_source(node) 
-
-    assert(code == generated_code)
 
 utils.is_docstring
 ------------------
