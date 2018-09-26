@@ -7,6 +7,7 @@ python:
   - "3.4"
   - "3.5"
   - "3.6"
+  - "3.7-dev"
 install:
   # python 2.6 and 3.3 compatibility
   - if [[ $TRAVIS_PYTHON_VERSION == 2.6 ]]; then pip install pycparser==2.14 cryptography==2.1.4; fi
@@ -25,4 +26,4 @@ deploy:
   on:
     tags: true
     branch: master
-    python: '3.6'
+    python: '3.7'
