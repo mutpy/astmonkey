@@ -3,6 +3,7 @@ import ast
 import pydot
 
 from astmonkey import utils
+from astmonkey.transformers import ParentChildNodeTransformer
 
 
 class GraphNodeVisitor(ast.NodeVisitor):
@@ -124,6 +125,8 @@ def to_source(node, indent_with=' ' * 4):
     parameter is equal to four spaces as suggested by PEP 8, but it might be
     adjusted to match the application's styleguide.
     """
+    parent_child_transformer = ParentChildNodeTransformer()
+    parent_child_transformer.visit(node)
     generator = SourceGeneratorNodeVisitor(indent_with)
     generator.visit(node)
 
@@ -449,6 +452,7 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
                 self.write(', ')
             else:
                 want_comma.append(True)
+
         for arg in node.args:
             write_comma()
             self.visit(arg)
@@ -517,11 +521,13 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
         self.write('}')
 
     def visit_BinOp(self, node):
-        self.write('(')
+        if isinstance(node.parent, ast.BinOp):
+            self.write('(')
         self.visit(node.left)
         self.write(' %s ' % BINOP_SYMBOLS[type(node.op)])
         self.visit(node.right)
-        self.write(')')
+        if isinstance(node.parent, ast.BinOp):
+            self.write(')')
 
     def visit_BoolOp(self, node):
         self.write('(')
