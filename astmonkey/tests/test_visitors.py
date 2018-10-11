@@ -66,8 +66,9 @@ class TestSourceGeneratorNodeVisitor(object):
     EMPTY_FUNC = FUNC_DEF + EOL + INDENT + PASS
     SINGLE_LINE_DOCSTRING = '""" This is a single line docstring."""'
     MULTI_LINE_DOCSTRING = '""" This is a multi line docstring.' + EOL + EOL + 'Further description...' + EOL + '"""'
+    LINE_CONT = '\\'
 
-    testdata = [
+    roundtrip_testdata = [
         # assign
         SIMPLE_ASSIGN,
         '(x, y) = z',
@@ -78,6 +79,7 @@ class TestSourceGeneratorNodeVisitor(object):
         SIMPLE_ASSIGN + EOL + EOL + SIMPLE_ASSIGN,
         EOL + SIMPLE_ASSIGN,
         EOL + EOL + SIMPLE_ASSIGN,
+        'x = \'string assign\'',
         # class definition
         EMPTY_CLASS,
         EOL + EMPTY_CLASS,
@@ -99,6 +101,7 @@ class TestSourceGeneratorNodeVisitor(object):
         'import x',
         'import x as y',
         'import x.y.z',
+        'import x, y, z',
         'from x import y',
         'from x import y, z, q',
         'from x import y as z',
@@ -136,6 +139,8 @@ class TestSourceGeneratorNodeVisitor(object):
         'try:' + EOL + INDENT + PASS + EOL + EOL + EOL + 'except Y:' + EOL + INDENT + PASS,
         'try:' + EOL + INDENT + PASS + EOL + 'except Y as y:' + EOL + INDENT + PASS,
         'try:' + EOL + INDENT + PASS + EOL + 'finally:' + EOL + INDENT + PASS,
+        'try:' + EOL + INDENT + PASS + EOL + 'except Y:' + EOL + INDENT + PASS + EOL + 'except Z:' + EOL + INDENT + PASS,
+        'try:' + EOL + INDENT + PASS + EOL + 'except Y:' + EOL + INDENT + PASS + EOL + 'else:' + EOL + INDENT + PASS,
         # del
         'del x',
         'del x, y, z',
@@ -146,8 +151,10 @@ class TestSourceGeneratorNodeVisitor(object):
         'assert True, \'message\'',
         'assert True',
         # lambda
-        'lambda x: x',
-        'lambda x: ((x ** 2) + (2 * x)) - 5',
+        'lambda x: (x)',
+        'lambda x: (((x ** 2) + (2 * x)) - 5)',
+        'lambda: (1)',
+        '(lambda: (yield))()',
         # subscript
         'x[y]',
         # slice
@@ -163,6 +170,7 @@ class TestSourceGeneratorNodeVisitor(object):
         # format
         '\'a %s\' % \'b\'',
         '\'a {}\'.format(\'b\')',
+        '(\'%f;%f\' % (point.x, point.y)).encode(\'ascii\')',
         # decorator
         '@x(y)' + EOL + EMPTY_FUNC,
         # call
@@ -195,10 +203,13 @@ class TestSourceGeneratorNodeVisitor(object):
         MULTI_LINE_DOCSTRING,
         CLASS_DEF + EOL + INDENT + MULTI_LINE_DOCSTRING,
         FUNC_DEF + EOL + INDENT + MULTI_LINE_DOCSTRING,
+        # line continuation
+        'x = ' + LINE_CONT + EOL + INDENT + 'y = 5',
+        'raise TypeError(' + EOL + INDENT + '\'data argument must be a bytes-like object, not str\')'
     ]
 
     if utils.check_version(from_inclusive=(2, 7)):
-        testdata += [
+        roundtrip_testdata += [
             # set
             '{1, 2}',
             # set comprehension
@@ -208,7 +219,7 @@ class TestSourceGeneratorNodeVisitor(object):
         ]
 
     if utils.check_version(to_exclusive=(3, 0)):
-        testdata += [
+        roundtrip_testdata += [
             # print
             'print \'a\'',
             'print \'a\',',
@@ -220,7 +231,7 @@ class TestSourceGeneratorNodeVisitor(object):
         ]
 
     if utils.check_version(from_inclusive=(3, 0)):
-        testdata += [
+        roundtrip_testdata += [
             # nonlocal
             'nonlocal x',
             # starred
@@ -240,7 +251,7 @@ class TestSourceGeneratorNodeVisitor(object):
         ]
 
     if utils.check_version(from_inclusive=(3, 3)):
-        testdata += [
+        roundtrip_testdata += [
             # with multiple
             'with x, y:' + EOL + INDENT + 'pass',
             # yield from
@@ -248,7 +259,7 @@ class TestSourceGeneratorNodeVisitor(object):
         ]
 
     if utils.check_version(from_inclusive=(3, 5)):
-        testdata += [
+        roundtrip_testdata += [
             # unpack into dict
             '{**kwargs}',
             # async/await
@@ -258,13 +269,35 @@ class TestSourceGeneratorNodeVisitor(object):
         ]
 
     if utils.check_version(from_inclusive=(3, 6)):
-        testdata += [
+        roundtrip_testdata += [
             # f-strings
             'f\'He said his name is {name}.\''
         ]
 
-    @pytest.mark.parametrize("source", testdata)
+    # add additional tests for semantic testing
+    semantic_testdata = list(roundtrip_testdata)
+    semantic_testdata += [
+        'x = ' + MULTI_LINE_DOCSTRING,
+    ]
+    if utils.check_version(from_inclusive=(3, 6)):
+        semantic_testdata += [
+            'raise TypeError(' + EOL + INDENT + 'f"data argument must be a bytes-like object, "' + EOL + INDENT +
+            'f"not {type(data).__name__}")',
+        ]
+
+    @pytest.mark.parametrize("source", roundtrip_testdata)
     def test_codegen_roundtrip(self, source):
+        """Check if converting code into AST and converting it back to code yields the same code."""
         node = ast.parse(source)
         generated = visitors.to_source(node)
         assert source == generated
+
+    @pytest.mark.parametrize("source", semantic_testdata)
+    def test_codegen_semantic_preservation(self, source):
+        """Check if converting code into AST, converting it back to code
+        and converting it into an AST again yields the same AST.
+        """
+        node = ast.parse(source)
+        generated = visitors.to_source(node)
+        node_from_generated = ast.parse(generated)
+        assert ast.dump(node) == ast.dump(node_from_generated)
