@@ -110,8 +110,8 @@ class TestSourceGeneratorNodeVisitor(object):
         '(x and y)',
         'x < y',
         '(not x)',
-        '(x + y)',
-        '((x + y) / z)',
+        'x + y',
+        '(x + y) / z',
         # if
         'if x:' + EOL + INDENT + PASS,
         'if x:' + EOL + INDENT + PASS + EOL + 'else:' + EOL + INDENT + PASS,
@@ -147,7 +147,7 @@ class TestSourceGeneratorNodeVisitor(object):
         'assert True',
         # lambda
         'lambda x: x',
-        'lambda x: (((x ** 2) + (2 * x)) - 5)',
+        'lambda x: ((x ** 2) + (2 * x)) - 5',
         # subscript
         'x[y]',
         # slice
@@ -161,7 +161,7 @@ class TestSourceGeneratorNodeVisitor(object):
         # raise
         'raise Exception()',
         # format
-        '(\'a %s\' % \'b\')',
+        '\'a %s\' % \'b\'',
         '\'a {}\'.format(\'b\')',
         # decorator
         '@x(y)' + EOL + EMPTY_FUNC,
