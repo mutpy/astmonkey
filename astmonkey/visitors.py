@@ -298,7 +298,6 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
 
     def visit_Import(self, node):
         write_comma = CommaWriter(self.write)
-
         self.write('import ')
         for item in node.names:
             write_comma()

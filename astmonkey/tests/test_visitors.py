@@ -276,9 +276,11 @@ class TestSourceGeneratorNodeVisitor(object):
 
     # add additional tests for semantic testing
     semantic_testdata = list(roundtrip_testdata)
+    
     semantic_testdata += [
         'x = ' + MULTI_LINE_DOCSTRING,
     ]
+
     if utils.check_version(from_inclusive=(3, 6)):
         semantic_testdata += [
             'raise TypeError(' + EOL + INDENT + 'f"data argument must be a bytes-like object, "' + EOL + INDENT +
