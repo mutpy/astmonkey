@@ -154,20 +154,25 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
         lines = len("".join(self.result).split('\n')) if self.result else 0
         return lines
 
-    @staticmethod
-    def _get_actual_lineno(node):
+    @classmethod
+    def _get_actual_lineno(cls, node):
         if node.col_offset == -1 and isinstance(node, (ast.Expr, ast.Str)):
-            # node is a multi line string and the line number is actually the last line
-            if isinstance(node, ast.Expr):
-                str_content = node.value.s
-            else:
-                str_content = node.s
-            if type(str_content) == bytes:
-                str_content = str_content.decode("utf-8")
+            str_content = cls._get_string_content(node)
             node_lineno = node.lineno - str_content.count('\n')
         else:
             node_lineno = node.lineno
         return node_lineno
+
+    @staticmethod
+    def _get_string_content(node):
+        # node is a multi line string and the line number is actually the last line
+        if isinstance(node, ast.Expr):
+            str_content = node.value.s
+        else:
+            str_content = node.s
+        if type(str_content) == bytes:
+            str_content = str_content.decode("utf-8")
+        return str_content
 
     def _newline_needed(self, node):
         lines = self._get_current_line_no()
