@@ -278,6 +278,7 @@ class TestSourceGeneratorNodeVisitor(object):
     semantic_testdata = list(roundtrip_testdata)
     semantic_testdata += [
         'x = ' + MULTI_LINE_DOCSTRING,
+        'b\'\'\'byte string' + EOL + 'next line' + EOL + '\'\'\'',
     ]
     if utils.check_version(from_inclusive=(3, 6)):
         semantic_testdata += [

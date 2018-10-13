@@ -162,6 +162,8 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
                 str_content = node.value.s
             else:
                 str_content = node.s
+            if type(str_content) == bytes:
+                str_content = str_content.decode("utf-8")
             node_lineno = node.lineno - str_content.count('\n')
         else:
             node_lineno = node.lineno
