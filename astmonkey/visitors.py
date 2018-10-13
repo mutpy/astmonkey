@@ -377,7 +377,7 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
             self.if_or_else(node)
 
     def if_or_else(self, node):
-        if isinstance(node.orelse[0], ast.If):
+        if len(node.orelse) == 1 and isinstance(node.orelse[0], ast.If):
             self.if_elif(node.orelse[0], use_elif=True)
         else:
             self.or_else(node)
@@ -386,7 +386,6 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
         self.for_loop(node)
 
     def for_loop(self, node, prefixes=()):
-
         self._prefixes(prefixes)
         self.write('for ')
         self.visit(node.target)
@@ -396,14 +395,12 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
         self.body_or_else(node)
 
     def visit_While(self, node):
-
         self.write('while ')
         self.visit(node.test)
         self.write(':')
         self.body_or_else(node)
 
     def visit_Pass(self, node):
-
         self.write('pass')
 
     def visit_Print(self, node):
@@ -423,20 +420,16 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
             self.write(',')
 
     def visit_Delete(self, node):
-
         self.write('del ')
-
         for target in node.targets:
             self.visit(target)
             if target is not node.targets[-1]:
                 self.write(', ')
 
     def visit_Global(self, node):
-
         self.write('global ' + ', '.join(node.names))
 
     def visit_Nonlocal(self, node):
-
         self.write('nonlocal ' + ', '.join(node.names))
 
     def visit_Return(self, node):
@@ -447,11 +440,9 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
             self.visit(node.value)
 
     def visit_Break(self, node):
-
         self.write('break')
 
     def visit_Continue(self, node):
-
         self.write('continue')
 
     def visit_Raise(self, node):
@@ -724,7 +715,6 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
                 self.visit(if_)
 
     def visit_ExceptHandler(self, node):
-
         self.write('except')
         if node.type is not None:
             self.write(' ')
@@ -739,7 +729,6 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
         self.write(node.arg)
 
     def visit_Assert(self, node):
-
         self.write('assert ')
         self.visit(node.test)
         if node.msg:
@@ -747,7 +736,6 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
             self.visit(node.msg)
 
     def visit_TryExcept(self, node):
-
         self.write('try:')
         self.body(node.body)
         if node.handlers:
@@ -761,7 +749,6 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
             self.visit(handler)
 
     def visit_TryFinally(self, node):
-
         self.write('try:')
         self.body(node.body)
         self.final_body(node)
@@ -844,7 +831,6 @@ class SourceGeneratorNodeVisitorPython33(SourceGeneratorNodeVisitorPython32):
     __python_version__ = (3, 3)
 
     def visit_Try(self, node):
-
         self.write('try:')
         self.body(node.body)
         if node.handlers:
@@ -855,7 +841,6 @@ class SourceGeneratorNodeVisitorPython33(SourceGeneratorNodeVisitorPython32):
             self.or_else(node)
 
     def visit_With(self, node):
-
         self.write('with ')
         for with_item in node.items:
             self.visit(with_item.context_expr)
