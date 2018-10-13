@@ -125,6 +125,8 @@ class TestSourceGeneratorNodeVisitor(object):
         + EOL + 'elif z:' + EOL + INDENT + PASS,
         'if x:' + EOL + INDENT + PASS + EOL + 'elif y:' + EOL + INDENT + PASS
         + EOL + 'elif z:' + EOL + INDENT + PASS + EOL + 'else:' + EOL + INDENT + PASS,
+        'if x:' + EOL + INDENT + PASS + EOL + 'else:' + EOL + INDENT + 'if y:' + EOL + INDENT + INDENT + PASS + EOL
+        + INDENT + SIMPLE_ASSIGN,
         'x if y else z',
         # while
         'while (not i != 1):' + EOL + INDENT + SIMPLE_ASSIGN,
@@ -276,7 +278,7 @@ class TestSourceGeneratorNodeVisitor(object):
 
     # add additional tests for semantic testing
     semantic_testdata = list(roundtrip_testdata)
-    
+
     semantic_testdata += [
         'x = ' + MULTI_LINE_DOCSTRING,
         'b\'\'\'byte string' + EOL + 'next line' + EOL + '\'\'\'',
