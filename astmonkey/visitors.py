@@ -5,6 +5,7 @@ import pydot
 
 from astmonkey import utils
 from astmonkey.transformers import ParentChildNodeTransformer
+from astmonkey.utils import CommaWriter
 
 
 class GraphNodeVisitor(ast.NodeVisitor):
@@ -155,10 +156,13 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
 
     @staticmethod
     def _get_actual_lineno(node):
-        if node.col_offset == -1:
+        if node.col_offset == -1 and isinstance(node, (ast.Expr, ast.Str)):
             # node is a multi line string and the line number is actually the last line
-            str_content = node.value.s
-            node_lineno = node.lineno - str_content.count("\n")
+            if isinstance(node, ast.Expr):
+                str_content = node.value.s
+            else:
+                str_content = node.s
+            node_lineno = node.lineno - str_content.count('\n')
         else:
             node_lineno = node.lineno
         return node_lineno
@@ -226,15 +230,8 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
     def docstring(self, node):
         self.write('"""{0}"""'.format(node.s))
 
-    def signature(self, node):
-        want_comma = []
-
-        def write_comma():
-            if want_comma:
-                self.write(', ')
-            else:
-                want_comma.append(True)
-
+    def signature(self, node, add_space=False):
+        write_comma = CommaWriter(self.write, add_space_at_beginning=add_space)
         padding = [None] * (len(node.args) - len(node.defaults))
         for arg, default in zip(node.args, padding + node.defaults):
             self.signature_arg(arg, default, write_comma)
@@ -300,9 +297,10 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
         self.write('from {0}{1} import {2}'.format('.' * node.level, node.module or '', ', '.join(imports)))
 
     def visit_Import(self, node):
-
+        write_comma = CommaWriter(self.write)
+        self.write('import ')
         for item in node.names:
-            self.write('import ')
+            write_comma()
             self.visit(item)
 
     def visit_Expr(self, node):
@@ -497,14 +495,7 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
         self.write(')')
 
     def call_signature(self, args, keywords, starargs, kwargs):
-        want_comma = []
-
-        def write_comma():
-            if want_comma:
-                self.write(', ')
-            else:
-                want_comma.append(True)
-
+        write_comma = CommaWriter(self.write)
         self.call_signature_part(args, self.call_arg, write_comma)
         self.call_signature_part(keywords, self.call_keyword, write_comma)
         self.call_signature_part(starargs, self.call_starargs, write_comma)
@@ -583,12 +574,12 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
         self.write('}')
 
     def visit_BinOp(self, node):
-        if isinstance(node.parent, ast.BinOp):
+        if isinstance(node.parent, (ast.BinOp, ast.Attribute)):
             self.write('(')
         self.visit(node.left)
         self.write(' %s ' % BINOP_SYMBOLS[type(node.op)])
         self.visit(node.right)
-        if isinstance(node.parent, ast.BinOp):
+        if isinstance(node.parent, (ast.BinOp, ast.Attribute)):
             self.write(')')
 
     def visit_BoolOp(self, node):
@@ -655,10 +646,16 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
             self.visit(node.value)
 
     def visit_Lambda(self, node):
-        self.write('lambda ')
-        self.signature(node.args)
+        if isinstance(node.parent, ast.Call):
+            self.write('(')
+        self.write('lambda')
+        self.signature(node.args, add_space=True)
         self.write(': ')
+        self.write('(')
         self.visit(node.body)
+        self.write(')')
+        if isinstance(node.parent, ast.Call):
+            self.write(')')
 
     def visit_Ellipsis(self, node):
         self.write('...')
@@ -748,10 +745,12 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
         self.body(node.body)
         if node.handlers:
             self.try_handlers(node)
+        if node.orelse:
+            self.or_else(node)
 
     def try_handlers(self, node):
-        self.correct_line_number(node.handlers[0], within_statement=False)
         for handler in node.handlers:
+            self.correct_line_number(handler, within_statement=False)
             self.visit(handler)
 
     def visit_TryFinally(self, node):
@@ -845,6 +844,8 @@ class SourceGeneratorNodeVisitorPython33(SourceGeneratorNodeVisitorPython32):
             self.try_handlers(node)
         if node.finalbody:
             self.final_body(node)
+        if node.orelse:
+            self.or_else(node)
 
     def visit_With(self, node):
 
