@@ -236,7 +236,9 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
         self.keyword_and_body('else:', node.orelse)
 
     def docstring(self, node):
-        self.write('"""{0}"""'.format(node.s))
+        s = repr(node.s)
+        # self.write('%s%s%s' % (s[0]*2, s, s[0]*2))
+        self.write('"""{0}"""'.format(node.s.replace('\\n', '\\\\n')))
 
     def signature(self, node, add_space=False):
         write_comma = CommaWriter(self.write, add_space_at_beginning=add_space)
@@ -595,7 +597,7 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
         for op, right in zip(node.ops, node.comparators):
             self.write(' %s ' % CMPOP_SYMBOLS[type(op)])
             self.visit(right)
-            # self.write(')')
+        # self.write(')')
 
     def visit_UnaryOp(self, node):
         self.write('(')
@@ -684,10 +686,14 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
         self.write('}')
 
     def visit_IfExp(self, node):
+        if isinstance(node.parent, ast.BinOp):
+            self.write('(')
         self.visit(node.body)
         self.write(' if ')
         self.visit(node.test)
         self.keyword_and_body(' else ', [node.orelse])
+        if isinstance(node.parent, ast.BinOp):
+            self.write(')')
 
     def visit_Starred(self, node):
         self.write('*')
@@ -959,7 +965,7 @@ class SourceGeneratorNodeVisitorPython36(SourceGeneratorNodeVisitorPython35):
             self.write('{')
             self.visit(node.value)
             if node.conversion != -1:
-                self.write('!' + chr(node.conversion))
+                self.write('!%c' % (node.conversion, ))
             self.write('}')
 
 

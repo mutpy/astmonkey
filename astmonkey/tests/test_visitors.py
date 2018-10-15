@@ -115,8 +115,6 @@ class TestSourceGeneratorNodeVisitor(object):
         'from . import x',
         'from .. import x',
         'from .y import x',
-        # TODO: 'import x, y, z',
-        # TODO: 'from x import (y, z, q)',
 
         # operators
         '(x and y)',
@@ -134,9 +132,9 @@ class TestSourceGeneratorNodeVisitor(object):
         'if x:' + EOL + INDENT + PASS + EOL + 'elif y:' + EOL + INDENT + PASS + EOL + 'elif z:' + EOL + INDENT + PASS + EOL + 'else:' + EOL + INDENT + PASS,
         'if x:' + EOL + INDENT + PASS + EOL + 'else:' + EOL + INDENT + 'if y:' + EOL + INDENT + INDENT + PASS + EOL + INDENT + SIMPLE_ASSIGN,
         'x if y else z',
-        # TODO: 'y * (z if z > 1 else 1)',
+        'y * (z if z > 1 else 1)',
         # TODO: 'if x:' + EOL + INDENT + PASS + EOL + 'else:' + EOL + INDENT + 'if x:' + EOL + INDENT + INDENT + PASS,
-        # TODO: 'if x' + EOL + INDENT + PASS + EOL + EOL + 'elif x:' + EOL + INDENT + PASS,
+        # TODO: 'if x:' + EOL + INDENT + PASS + EOL + EOL + 'elif x:' + EOL + INDENT + PASS,
 
         # while
         'while (not i != 1):' + EOL + INDENT + SIMPLE_ASSIGN,
@@ -226,7 +224,6 @@ class TestSourceGeneratorNodeVisitor(object):
 
         # str
         "x = 'y'",
-        # TODO: 'r"\\n"',
 
         # num
         '1',
@@ -335,6 +332,7 @@ class TestSourceGeneratorNodeVisitor(object):
     semantic_testdata += [
         'x = ' + MULTI_LINE_DOCSTRING,
         'b\'\'\'byte string' + EOL + 'next line' + EOL + '\'\'\'',
+        r'r"""\n"""',
     ]
 
     if utils.check_version(from_inclusive=(3, 6)):
