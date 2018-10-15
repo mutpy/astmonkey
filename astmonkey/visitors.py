@@ -758,6 +758,10 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
         self.keyword_and_body('finally:', node.finalbody)
 
     def visit_With(self, node):
+        self.with_body(node)
+
+    def with_body(self, node, prefixes=[]):
+        self._prefixes(prefixes)
         self.write('with ')
         self.visit(node.context_expr)
         if node.optional_vars is not None:
@@ -841,7 +845,9 @@ class SourceGeneratorNodeVisitorPython33(SourceGeneratorNodeVisitorPython32):
         if node.orelse:
             self.or_else(node)
 
-    def visit_With(self, node):
+
+    def with_body(self, node, prefixes=[]):
+        self._prefixes(prefixes)
         self.write('with ')
         for with_item in node.items:
             self.visit(with_item.context_expr)
@@ -889,6 +895,9 @@ class SourceGeneratorNodeVisitorPython35(SourceGeneratorNodeVisitorPython34):
 
     def visit_AsyncFor(self, node):
         self.for_loop(node, prefixes=['async'])
+
+    def visit_AsyncWith(self, node):
+        self.with_body(node, prefixes=['async'])
 
     def visit_Await(self, node):
         self.write('await ')

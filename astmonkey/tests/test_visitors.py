@@ -314,7 +314,7 @@ class TestSourceGeneratorNodeVisitor(object):
             'async ' + FUNC_DEF + EOL + INDENT + PASS,
             'async ' + FUNC_DEF + EOL + INDENT + 'async for line in reader:' + EOL + INDENT + INDENT + PASS,
             'async ' + FUNC_DEF + EOL + INDENT + 'await asyncio.sleep(1)',
-            # TODO: 'async with x:' + EOL + INDENT + PASS,
+            'async with x:' + EOL + INDENT + PASS,
 
             # matrix multiplication operator
             'x @ y',
