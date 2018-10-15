@@ -317,7 +317,7 @@ class TestSourceGeneratorNodeVisitor(object):
             # TODO: 'async with x:' + EOL + INDENT + PASS,
 
             # matrix multiplication operator
-            # TODO: 'x @ y',
+            'x @ y',
         ]
 
     if utils.check_version(from_inclusive=(3, 6)):

@@ -75,6 +75,7 @@ BINOP_SYMBOLS = {
     ast.Add: '+',
     ast.Sub: '-',
     ast.Mult: '*',
+    ast.MatMult: '@',
     ast.Div: '/',
     ast.FloorDiv: '//',
     ast.Mod: '%',
