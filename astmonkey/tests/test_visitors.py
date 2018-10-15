@@ -323,11 +323,10 @@ class TestSourceGeneratorNodeVisitor(object):
     if utils.check_version(from_inclusive=(3, 6)):
         roundtrip_testdata += [
             # f-strings
-            'f\'He said his name is {name}.\''
-            # TODO: 'f"{x!r}"',
-            # TODO: 'f"{x!s}"',
-            # TODO: 'f"{x!a}"',
-            # TODO: 'f"a\'b"',
+            'f\'He said his name is {name}.\'',
+            "f'{x!r}'",
+            "f'{x!s}'",
+            "f'{x!a}'",
         ]
 
     # add additional tests for semantic testing
@@ -342,6 +341,7 @@ class TestSourceGeneratorNodeVisitor(object):
         semantic_testdata += [
             'raise TypeError(' + EOL + INDENT + 'f"data argument must be a bytes-like object, "' + EOL + INDENT +
             'f"not {type(data).__name__}")',
+            'f"a\'b"',
         ]
 
     @pytest.mark.parametrize("source", roundtrip_testdata)

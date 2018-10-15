@@ -939,7 +939,7 @@ class SourceGeneratorNodeVisitorPython36(SourceGeneratorNodeVisitorPython35):
             self.write('f\'')
             for item in node.values:
                 if isinstance(item, ast.Str):
-                    self.write(item.s.lstrip('\'').rstrip('\''))
+                    self.write(item.s.lstrip('\'').rstrip('\'').replace("'", "\\'"))
                 else:
                     self.visit(item)
             self.write('\'')
@@ -948,6 +948,8 @@ class SourceGeneratorNodeVisitorPython36(SourceGeneratorNodeVisitorPython35):
         if self._is_node_args_valid(node, 'value'):
             self.write('{')
             self.visit(node.value)
+            if node.conversion != -1:
+                self.write('!' + chr(node.conversion))
             self.write('}')
 
 
