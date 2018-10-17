@@ -234,7 +234,7 @@ class TestSourceGeneratorNodeVisitor(object):
         CLASS_DEF + EOL + INDENT + MULTI_LINE_DOCSTRING,
         FUNC_DEF + EOL + INDENT + MULTI_LINE_DOCSTRING,
         # TODO: SIMPLE_ASSIGN + EOL + MULTI_LINE_DOCSTRING,
-        # TODO: MULTI_LINE_DOCSTRING + EOL + MULTI_LINE_DOCSTRING,
+        # TODO:     MULTI_LINE_DOCSTRING + EOL + MULTI_LINE_DOCSTRING,
 
         # line continuation
         'x = ' + LINE_CONT + EOL + INDENT + 'y = 5',
@@ -257,10 +257,12 @@ class TestSourceGeneratorNodeVisitor(object):
             'print \'a\'',
             'print \'a\',',
             'print >> sys.stderr, \'a\'',
+
             # raise with msg and tb
             'raise x, y, z',
+
             # repr
-            '`a`'
+            '`a`',
         ]
 
     if utils.check_version(from_inclusive=(3, 0)):
@@ -269,7 +271,6 @@ class TestSourceGeneratorNodeVisitor(object):
             'nonlocal x',
 
             # starred
-            # TODO: 'x, *y = z',
             '*x = y',
 
             # raise from
@@ -286,12 +287,18 @@ class TestSourceGeneratorNodeVisitor(object):
 
             # type hinting
             'def f(a: str) -> str:' + EOL + INDENT + PASS,
-            # TODO: "def f(x: 'x' = 0):" + EOL + INDENT + PASS,
+            # TODO:"def f(x: 'x' = 0):" + EOL + INDENT + PASS,
             # TODO: "def f(x: 'x' = 0, *args: 'args', y: 'y' = 1, **kwargs: 'kwargs') -> 'return':" + EOL + INDENT + PASS,
 
             # extended iterable unpacking
             '(x, *y) = z',
-            # TODO: '[x, *y, x] = z'
+            '[x, *y, x] = z',
+
+
+            # kwonly arguments
+            'def f(*, x):' + EOL + INDENT + PASS,
+            'def f(*, x: int = 5):' + EOL + INDENT + PASS,
+            'def f(x, *, y):' + EOL + INDENT + PASS,
         ]
 
     if utils.check_version(from_inclusive=(3, 3)):
