@@ -96,8 +96,8 @@ class TestSourceGeneratorNodeVisitor(object):
         'def f(a, b=\'c\', *args, **kwargs):' + EOL + INDENT + PASS,
         FUNC_DEF + EOL + INDENT + 'return',
         FUNC_DEF + EOL + INDENT + 'return 5',
-        # TODO: 'def __init__(self, *args, x=None, **kwargs):' + EOL + INDENT + PASS,
-        # TODO: FUNC_DEF + EOL + INDENT + 'return (x ==' + EOL + INDENT + '        ' + 'x)',
+        'def __init__(self, *args, x=None, **kwargs):' + EOL + INDENT + PASS,
+        FUNC_DEF + EOL + INDENT + 'return x == ' + LINE_CONT + EOL + INDENT + INDENT + 'x',
 
         # yield
         FUNC_DEF + EOL + INDENT + 'yield',
@@ -133,8 +133,8 @@ class TestSourceGeneratorNodeVisitor(object):
         'if x:' + EOL + INDENT + PASS + EOL + 'else:' + EOL + INDENT + 'if y:' + EOL + INDENT + INDENT + PASS + EOL + INDENT + SIMPLE_ASSIGN,
         'x if y else z',
         'y * (z if z > 1 else 1)',
-        # TODO: 'if x:' + EOL + INDENT + PASS + EOL + 'else:' + EOL + INDENT + 'if x:' + EOL + INDENT + INDENT + PASS,
-        # TODO: 'if x:' + EOL + INDENT + PASS + EOL + EOL + 'elif x:' + EOL + INDENT + PASS,
+
+        # TODO: 'if x:' + EOL + INDENT + PASS + EOL + EOL + 'elif x:' + EOL + INDENT + PASS,  # Double EOL
 
         # while
         'while (not i != 1):' + EOL + INDENT + SIMPLE_ASSIGN,
@@ -233,8 +233,8 @@ class TestSourceGeneratorNodeVisitor(object):
         MULTI_LINE_DOCSTRING,
         CLASS_DEF + EOL + INDENT + MULTI_LINE_DOCSTRING,
         FUNC_DEF + EOL + INDENT + MULTI_LINE_DOCSTRING,
-        # TODO: SIMPLE_ASSIGN + EOL + MULTI_LINE_DOCSTRING,
-        # TODO:     MULTI_LINE_DOCSTRING + EOL + MULTI_LINE_DOCSTRING,
+        SIMPLE_ASSIGN + EOL + MULTI_LINE_DOCSTRING,
+        MULTI_LINE_DOCSTRING + EOL + MULTI_LINE_DOCSTRING,
 
         # line continuation
         'x = ' + LINE_CONT + EOL + INDENT + 'y = 5',
@@ -340,6 +340,7 @@ class TestSourceGeneratorNodeVisitor(object):
         'x = ' + MULTI_LINE_DOCSTRING,
         'b\'\'\'byte string' + EOL + 'next line' + EOL + '\'\'\'',
         r'r"""\n"""',
+        'if x:' + EOL + INDENT + PASS + EOL + 'else:' + EOL + INDENT + 'if x:' + EOL + INDENT + INDENT + PASS,
     ]
 
     if utils.check_version(from_inclusive=(3, 6)):
