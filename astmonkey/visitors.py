@@ -899,14 +899,6 @@ class SourceGeneratorNodeVisitorPython34(SourceGeneratorNodeVisitorPython33):
         else:
             self.write(node.id)
 
-    def signature_vararg(self, node, write_comma):
-        if node.vararg:
-            self.signature_arg(node.vararg.arg, None, write_comma, '*')
-
-    def signature_kwarg(self, node, write_comma):
-        if node.kwarg:
-            self.signature_arg(node.kwarg.arg, None, write_comma, '**', )
-
 
 class SourceGeneratorNodeVisitorPython35(SourceGeneratorNodeVisitorPython34):
     __python_version__ = (3, 5)

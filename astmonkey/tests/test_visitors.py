@@ -287,8 +287,8 @@ class TestSourceGeneratorNodeVisitor(object):
 
             # type hinting
             'def f(a: str) -> str:' + EOL + INDENT + PASS,
-            # TODO:"def f(x: 'x' = 0):" + EOL + INDENT + PASS,
-            # TODO: "def f(x: 'x' = 0, *args: 'args', y: 'y' = 1, **kwargs: 'kwargs') -> 'return':" + EOL + INDENT + PASS,
+            "def f(x: 'x' = 0):" + EOL + INDENT + PASS,
+            "def f(x: 'x' = 0, *args: 'args', y: 'y' = 1, **kwargs: 'kwargs') -> 'return':" + EOL + INDENT + PASS,
 
             # extended iterable unpacking
             '(x, *y) = z',
