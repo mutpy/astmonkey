@@ -96,7 +96,6 @@ class TestSourceGeneratorNodeVisitor(object):
         'def f(a, b=\'c\', *args, **kwargs):' + EOL + INDENT + PASS,
         FUNC_DEF + EOL + INDENT + 'return',
         FUNC_DEF + EOL + INDENT + 'return 5',
-        'def __init__(self, *args, x=None, **kwargs):' + EOL + INDENT + PASS,
         FUNC_DEF + EOL + INDENT + 'return x == ' + LINE_CONT + EOL + INDENT + INDENT + 'x',
 
         # yield
@@ -300,6 +299,9 @@ class TestSourceGeneratorNodeVisitor(object):
             'def f(*, x):' + EOL + INDENT + PASS,
             'def f(*, x: int = 5):' + EOL + INDENT + PASS,
             'def f(x, *, y):' + EOL + INDENT + PASS,
+
+            # function definition
+            'def F(self, *args, x=None, **kwargs):' + EOL + INDENT + PASS,
         ]
 
     if utils.check_version(from_inclusive=(3, 3)):
