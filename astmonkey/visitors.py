@@ -617,13 +617,21 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
         # self.write(')')
 
     def visit_UnaryOp(self, node):
-        self.write('(')
+        # if not isinstance(node.op, ast.USub):
+        # self.write('(')
+
         op = UNARYOP_SYMBOLS[type(node.op)]
         self.write(op)
         if op == 'not':
             self.write(' ')
+        if not isinstance(node.operand, (ast.Name, ast.Num)):
+            self.write('(')
         self.visit(node.operand)
-        self.write(')')
+
+        if not isinstance(node.operand, (ast.Name, ast.Num)):
+            self.write(')')
+        # if not isinstance(node.op, ast.USub):
+        # self.write(')')
 
     def visit_Subscript(self, node):
         self.visit(node.value)

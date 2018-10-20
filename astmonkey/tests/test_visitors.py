@@ -119,9 +119,10 @@ class TestSourceGeneratorNodeVisitor(object):
         # operators
         '(x and y)',
         'x < y',
-        '(not x)',
+        'not x',
         'x + y',
         '(x + y) / z',
+        '-(-x // y)',
 
         # if
         'if x:' + EOL + INDENT + PASS,
@@ -137,7 +138,7 @@ class TestSourceGeneratorNodeVisitor(object):
         # TODO: 'if x:' + EOL + INDENT + PASS + EOL + EOL + 'elif x:' + EOL + INDENT + PASS,  # Double EOL
 
         # while
-        'while (not i != 1):' + EOL + INDENT + SIMPLE_ASSIGN,
+        'while not (i != 1):' + EOL + INDENT + SIMPLE_ASSIGN,
         'while True:' + EOL + INDENT + 'if True:' + EOL + INDENT + INDENT + 'continue',
         'while True:' + EOL + INDENT + 'if True:' + EOL + INDENT + INDENT + 'break',
         SIMPLE_ASSIGN + EOL + EOL + 'while False:' + EOL + INDENT + PASS,
