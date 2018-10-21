@@ -133,6 +133,8 @@ class TestSourceGeneratorNodeVisitor(object):
         'if x:' + EOL + INDENT + PASS + EOL + 'else:' + EOL + INDENT + 'if y:' + EOL + INDENT + INDENT + PASS + EOL + INDENT + SIMPLE_ASSIGN,
         'x if y else z',
         'y * (z if z > 1 else 1)',
+        'if x < y == z < x:' + EOL + INDENT + PASS,
+        'if (x < y) == (z < x):' + EOL + INDENT + PASS,
 
         # TODO: 'if x:' + EOL + INDENT + PASS + EOL + EOL + 'elif x:' + EOL + INDENT + PASS,  # Double EOL
 

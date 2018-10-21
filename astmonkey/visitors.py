@@ -614,10 +614,11 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
                 self.visit(value)
 
     def visit_Compare(self, node):
-        self.visit(node.left)
-        for op, right in zip(node.ops, node.comparators):
-            self.write(' %s ' % CMPOP_SYMBOLS[type(op)])
-            self.visit(right)
+        with self.inside('(', ')', cond=(isinstance(node.parent, ast.Compare))):
+            self.visit(node.left)
+            for op, right in zip(node.ops, node.comparators):
+                self.write(' %s ' % CMPOP_SYMBOLS[type(op)])
+                self.visit(right)
 
     def visit_UnaryOp(self, node):
         op = UNARYOP_SYMBOLS[type(node.op)]
