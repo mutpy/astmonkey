@@ -307,7 +307,7 @@ class TestSourceGeneratorNodeVisitor(object):
             'def f(x, *, y):' + EOL + INDENT + PASS,
 
             # function definition
-            'def F(self, *args, x=None, **kwargs):' + EOL + INDENT + PASS,
+            'def f(self, *args, x=None, **kwargs):' + EOL + INDENT + PASS,
         ]
 
     if utils.check_version(from_inclusive=(3, 3)):
