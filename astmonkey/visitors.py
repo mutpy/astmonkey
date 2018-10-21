@@ -271,16 +271,19 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
 
         self.signature_kwarg(node, write_comma)
 
-    def signature_arg(self, arg, default, write_comma, prefix=''):
+    def signature_arg(self, arg, default, write_comma, prefix='', annotation=None):
         if not arg:
             return
         write_comma()
         self.write(prefix)
         self.visit(arg)
 
-        if self._is_node_args_valid(arg, 'annotation'):
+        if self._is_node_args_valid(arg, 'annotation') and not annotation:
+            annotation = arg.annotation
+
+        if annotation:
             self.write(': ')
-            self.visit(arg.annotation)
+            self.visit(annotation)
             if default is not None:
                 self.write(' = ')
                 self.visit(default)
@@ -290,11 +293,13 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
 
     def signature_kwarg(self, node, write_comma):
         if node.kwarg:
-            self.signature_arg(node.kwarg, None, write_comma, '**')
+            annotation = node.kwargannotation if self._is_node_args_valid(node, 'kwargannotation') else None
+            self.signature_arg(node.kwarg, None, write_comma, '**', annotation=annotation)
 
     def signature_vararg(self, node, write_comma):
         if node.vararg:
-            self.signature_arg(node.vararg, None, write_comma, '*')
+            annotation = node.varargannotation if self._is_node_args_valid(node, 'varargannotation') else None
+            self.signature_arg(node.vararg, None, write_comma, '*', annotation=annotation)
 
     def decorators(self, node):
         if node.decorator_list:
