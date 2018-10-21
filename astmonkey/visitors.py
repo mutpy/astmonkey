@@ -4,6 +4,7 @@ from contextlib import contextmanager
 import pydot
 
 from astmonkey import utils
+from astmonkey.tests.utils import check_version
 from astmonkey.transformers import ParentChildNodeTransformer
 from astmonkey.utils import CommaWriter
 
@@ -75,7 +76,6 @@ BINOP_SYMBOLS = {
     ast.Add: '+',
     ast.Sub: '-',
     ast.Mult: '*',
-    ast.MatMult: '@',
     ast.Div: '/',
     ast.FloorDiv: '//',
     ast.Mod: '%',
@@ -86,6 +86,9 @@ BINOP_SYMBOLS = {
     ast.BitXor: '^',
     ast.Pow: '**'
 }
+
+if check_version(from_inclusive=(3, 5)):
+    BINOP_SYMBOLS[ast.MatMult] = '@'
 
 CMPOP_SYMBOLS = {
     ast.Eq: '==',
@@ -562,7 +565,8 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
         self.write(repr(node.s))
 
     def visit_Num(self, node):
-        self.write(repr(node.n))
+        with self.inside('(', ')', cond=(node.n < 0)):
+            self.write(repr(node.n))
 
     def visit_Tuple(self, node):
         with self.inside('(', ')'):
