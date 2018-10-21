@@ -121,7 +121,8 @@ class TestSourceGeneratorNodeVisitor(object):
         'not x',
         'x + y',
         '(x + y) / z',
-        '-(-x // y)',
+        '-((-x) // y)',
+        '(-1) ** x',
 
         # if
         'if x:' + EOL + INDENT + PASS,
