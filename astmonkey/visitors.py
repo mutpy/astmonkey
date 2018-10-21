@@ -1,4 +1,4 @@
-import ast
+import ast, re
 from contextlib import contextmanager
 
 import pydot
@@ -245,8 +245,11 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
 
     def docstring(self, node):
         s = repr(node.s)
-        # self.write('%s%s%s' % (s[0]*2, s, s[0]*2))
-        self.write('"""{0}"""'.format(node.s.replace('\\n', '\\\\n')))
+        s = re.sub(r'(?<!\\)\\n', '\n', s)
+        s = re.sub(r'(?<!\\)\\t', '\t', s)
+
+        self.write('%s%s%s' % (s[0]*2, s, s[0]*2))
+        # self.write('"""{0}"""'.format(node.s))#.replace('\\n', '\\\\n')))
 
     def signature(self, node, add_space=False):
         write_comma = CommaWriter(self.write, add_space_at_beginning=add_space)

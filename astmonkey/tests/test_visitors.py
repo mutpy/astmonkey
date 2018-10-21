@@ -64,8 +64,8 @@ class TestSourceGeneratorNodeVisitor(object):
     EMPTY_CLASS = CLASS_DEF + EOL + INDENT + PASS
     FUNC_DEF = 'def f():'
     EMPTY_FUNC = FUNC_DEF + EOL + INDENT + PASS
-    SINGLE_LINE_DOCSTRING = '""" This is a single line docstring."""'
-    MULTI_LINE_DOCSTRING = '""" This is a multi line docstring.' + EOL + EOL + 'Further description...' + EOL + '"""'
+    SINGLE_LINE_DOCSTRING = "''' This is a single line docstring.'''"
+    MULTI_LINE_DOCSTRING = "''' This is a multi line docstring." + EOL + EOL + 'Further description...' + EOL + "'''"
     LINE_CONT = '\\'
 
     roundtrip_testdata = [
@@ -190,6 +190,7 @@ class TestSourceGeneratorNodeVisitor(object):
         '\'a %s\' % \'b\'',
         '\'a {}\'.format(\'b\')',
         '(\'%f;%f\' % (point.x, point.y)).encode(\'ascii\')',
+
         # decorator
         '@x(y)' + EOL + EMPTY_FUNC,
 
@@ -224,6 +225,8 @@ class TestSourceGeneratorNodeVisitor(object):
 
         # str
         "x = 'y'",
+        "x = '\"'",
+        'x = "\'"',
 
         # num
         '1',
@@ -342,7 +345,7 @@ class TestSourceGeneratorNodeVisitor(object):
     semantic_testdata += [
         'x = ' + MULTI_LINE_DOCSTRING,
         'b\'\'\'byte string' + EOL + 'next line' + EOL + '\'\'\'',
-        r'r"""\n"""',
+        r'r"""\a\b\f\n\r\t\v"""',
         'if x:' + EOL + INDENT + PASS + EOL + 'else:' + EOL + INDENT + 'if x:' + EOL + INDENT + INDENT + PASS,
     ]
 
