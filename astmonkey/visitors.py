@@ -259,12 +259,9 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
         for arg, default in zip(node.args, padding + node.defaults):
             self.signature_arg(arg, default, write_comma)
 
-        self.signature_vararg(node, write_comma)
-
-        if self._is_node_args_valid(node, 'kwonlyargs') and len(node.kwonlyargs) > 0:
-            self.signature_kwonlyargs(node, write_comma)
-
-        self.signature_kwarg(node, write_comma)
+        self.signature_spec_arg(node, 'vararg', write_comma, prefix='*')
+        self.signature_kwonlyargs(node, write_comma)
+        self.signature_spec_arg(node, 'kwarg', write_comma, prefix='**')
 
     def signature_arg(self, arg, default, write_comma, prefix=''):
         write_comma()
@@ -282,22 +279,20 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
             self.visit(default)
 
     def signature_kwonlyargs(self, node, write_comma):
-        if not node.vararg:
-            write_comma()
-            self.write('*')
-            
-        for arg, default in zip(node.kwonlyargs, node.kw_defaults):
-            self.signature_arg(arg, default, write_comma)
+        if self._is_node_args_valid(node, 'kwonlyargs') and len(node.kwonlyargs) > 0:
+            if not node.vararg:
+                write_comma()
+                self.write('*')
 
-    def signature_kwarg(self, node, write_comma):
-        if node.kwarg:
-            arg = ast.arg(node.kwarg, node.kwargannotation) if hasattr(node, 'kwargannotation') else node.kwarg
-            self.signature_arg(arg, None, write_comma, '**')
+            for arg, default in zip(node.kwonlyargs, node.kw_defaults):
+                self.signature_arg(arg, default, write_comma)
 
-    def signature_vararg(self, node, write_comma):
-        if node.vararg:
-            arg = ast.arg(node.vararg, node.varargannotation) if hasattr(node, 'varargannotation') else node.vararg
-            self.signature_arg(arg, None, write_comma, '*')
+    def signature_spec_arg(self, node, var, write_comma, prefix):
+        arg = getattr(node, var)
+        if arg:
+            if hasattr(node, var + 'annotation'):
+                arg = ast.arg(arg, getattr(node, var + 'annotation'))
+            self.signature_arg(arg, None, write_comma, prefix)
 
     def decorators(self, node):
         if node.decorator_list:
