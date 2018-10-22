@@ -144,9 +144,11 @@ class TestSourceGeneratorNodeVisitor(object):
         'while True:' + EOL + INDENT + 'if True:' + EOL + INDENT + INDENT + 'continue',
         'while True:' + EOL + INDENT + 'if True:' + EOL + INDENT + INDENT + 'break',
         SIMPLE_ASSIGN + EOL + EOL + 'while False:' + EOL + INDENT + PASS,
+
         # for
         'for x in y:' + EOL + INDENT + 'break',
         'for x in y:' + EOL + INDENT + PASS + EOL + 'else:' + EOL + INDENT + PASS,
+
         # try ... except
         'try:' + EOL + INDENT + PASS + EOL + 'except Y:' + EOL + INDENT + PASS,
         'try:' + EOL + INDENT + PASS + EOL + EOL + EOL + 'except Y:' + EOL + INDENT + PASS,
@@ -206,9 +208,11 @@ class TestSourceGeneratorNodeVisitor(object):
         'f(a, b=1, *args, **kwargs)',
 
         # list
+        '[]',
         '[1, 2, 3]',
 
         # dict
+        '{}',
         '{a: 3, b: \'c\'}',
 
         # list comprehension
@@ -218,6 +222,8 @@ class TestSourceGeneratorNodeVisitor(object):
         '(x for x in y if x)',
 
         # tuple
+        '()',
+        '(1,)',
         '(1, 2)',
 
         # attribute
@@ -251,8 +257,10 @@ class TestSourceGeneratorNodeVisitor(object):
         roundtrip_testdata += [
             # set
             '{1, 2}',
+
             # set comprehension
             '{x for x in y if x}',
+            
             # dict comprehension
             'x = {y: z for (y, z) in a}',
         ]
