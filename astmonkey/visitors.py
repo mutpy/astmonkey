@@ -279,13 +279,15 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
             self.visit(default)
 
     def signature_kwonlyargs(self, node, write_comma):
-        if self._is_node_args_valid(node, 'kwonlyargs') and len(node.kwonlyargs) > 0:
-            if not node.vararg:
-                write_comma()
-                self.write('*')
+        if not self._is_node_args_valid(node, 'kwonlyargs') or len(node.kwonlyargs) == 0:
+            return
 
-            for arg, default in zip(node.kwonlyargs, node.kw_defaults):
-                self.signature_arg(arg, default, write_comma)
+        if not node.vararg:
+            write_comma()
+            self.write('*')
+
+        for arg, default in zip(node.kwonlyargs, node.kw_defaults):
+            self.signature_arg(arg, default, write_comma)
 
     def signature_spec_arg(self, node, var, write_comma, prefix):
         arg = getattr(node, var)
