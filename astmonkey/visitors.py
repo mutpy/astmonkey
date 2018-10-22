@@ -262,11 +262,7 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
         self.signature_vararg(node, write_comma)
 
         if self._is_node_args_valid(node, 'kwonlyargs') and len(node.kwonlyargs) > 0:
-            if not node.vararg:
-                write_comma()
-                self.write('*')
-            for arg, default in zip(node.kwonlyargs, node.kw_defaults):
-                self.signature_arg(arg, default, write_comma)
+            self.signature_kwonlyargs(node, write_comma)
 
         self.signature_kwarg(node, write_comma)
 
@@ -285,19 +281,23 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
             self.write('=')
             self.visit(default)
 
+    def signature_kwonlyargs(self, node, write_comma):
+        if not node.vararg:
+            write_comma()
+            self.write('*')
+            
+        for arg, default in zip(node.kwonlyargs, node.kw_defaults):
+            self.signature_arg(arg, default, write_comma)
+
     def signature_kwarg(self, node, write_comma):
         if node.kwarg:
-            if hasattr(node, 'kwargannotation'):
-                self.signature_arg(ast.arg(node.kwarg, node.kwargannotation), None, write_comma, '**')
-            else:
-                self.signature_arg(node.kwarg, None, write_comma, '**')
+            arg = ast.arg(node.kwarg, node.kwargannotation) if hasattr(node, 'kwargannotation') else node.kwarg
+            self.signature_arg(arg, None, write_comma, '**')
 
     def signature_vararg(self, node, write_comma):
         if node.vararg:
-            if hasattr(node, 'varargannotation'):
-                self.signature_arg(ast.arg(node.vararg, node.varargannotation), None, write_comma, '*')
-            else:
-                self.signature_arg(node.vararg, None, write_comma, '*')
+            arg = ast.arg(node.vararg, node.varargannotation) if hasattr(node, 'varargannotation') else node.vararg
+            self.signature_arg(arg, None, write_comma, '*')
 
     def decorators(self, node):
         if node.decorator_list:
