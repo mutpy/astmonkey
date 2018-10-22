@@ -250,9 +250,7 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
         s = repr(node.s)
         s = re.sub(r'(?<!\\)\\n', '\n', s)
         s = re.sub(r'(?<!\\)\\t', '\t', s)
-
         self.write('%s%s%s' % (s[0]*2, s, s[0]*2))
-        # self.write('"""{0}"""'.format(node.s))#.replace('\\n', '\\\\n')))
 
     def signature(self, node, add_space=False):
         write_comma = CommaWriter(self.write, add_space_at_beginning=add_space)
@@ -262,6 +260,7 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
             self.signature_arg(arg, default, write_comma)
 
         self.signature_vararg(node, write_comma)
+
         if self._is_node_args_valid(node, 'kwonlyargs') and len(node.kwonlyargs) > 0:
             if not node.vararg:
                 write_comma()
@@ -271,19 +270,14 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
 
         self.signature_kwarg(node, write_comma)
 
-    def signature_arg(self, arg, default, write_comma, prefix='', annotation=None):
-        if not arg:
-            return
+    def signature_arg(self, arg, default, write_comma, prefix=''):
         write_comma()
         self.write(prefix)
         self.visit(arg)
 
-        if self._is_node_args_valid(arg, 'annotation') and not annotation:
-            annotation = arg.annotation
-
-        if annotation:
+        if self._is_node_args_valid(arg, 'annotation'):
             self.write(': ')
-            self.visit(annotation)
+            self.visit(arg.annotation)
             if default is not None:
                 self.write(' = ')
                 self.visit(default)
@@ -293,13 +287,17 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
 
     def signature_kwarg(self, node, write_comma):
         if node.kwarg:
-            annotation = node.kwargannotation if self._is_node_args_valid(node, 'kwargannotation') else None
-            self.signature_arg(node.kwarg, None, write_comma, '**', annotation=annotation)
+            if hasattr(node, 'kwargannotation'):
+                self.signature_arg(ast.arg(node.kwarg, node.kwargannotation), None, write_comma, '**')
+            else:
+                self.signature_arg(node.kwarg, None, write_comma, '**')
 
     def signature_vararg(self, node, write_comma):
         if node.vararg:
-            annotation = node.varargannotation if self._is_node_args_valid(node, 'varargannotation') else None
-            self.signature_arg(node.vararg, None, write_comma, '*', annotation=annotation)
+            if hasattr(node, 'varargannotation'):
+                self.signature_arg(ast.arg(node.vararg, node.varargannotation), None, write_comma, '*')
+            else:
+                self.signature_arg(node.vararg, None, write_comma, '*')
 
     def decorators(self, node):
         if node.decorator_list:
