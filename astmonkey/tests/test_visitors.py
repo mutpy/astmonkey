@@ -1,14 +1,12 @@
 # -*- coding: utf-8 -*-
 import pytest
 
-from astmonkey.tests import utils
-
 try:
     import unittest2 as unittest
 except ImportError:
     import unittest
 import ast
-from astmonkey import visitors, transformers
+from astmonkey import visitors, transformers, utils
 
 
 class TestGraphNodeVisitor(object):
@@ -123,6 +121,9 @@ class TestSourceGeneratorNodeVisitor(object):
         '(x + y) / z',
         '-((-x) // y)',
         '(-1) ** x',
+        '-(1 ** x)',
+        '0 + 0j',
+        '(-1j) ** x',
 
         # if
         'if x:' + EOL + INDENT + PASS,
@@ -260,7 +261,7 @@ class TestSourceGeneratorNodeVisitor(object):
 
             # set comprehension
             '{x for x in y if x}',
-            
+
             # dict comprehension
             'x = {y: z for (y, z) in a}',
         ]

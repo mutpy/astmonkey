@@ -4,9 +4,8 @@ from contextlib import contextmanager
 import pydot
 
 from astmonkey import utils
-from astmonkey.tests.utils import check_version
 from astmonkey.transformers import ParentChildNodeTransformer
-from astmonkey.utils import CommaWriter
+from astmonkey.utils import CommaWriter, check_version
 
 
 class GraphNodeVisitor(ast.NodeVisitor):
@@ -565,7 +564,9 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
         self.write(repr(node.s))
 
     def visit_Num(self, node):
-        with self.inside('(', ')', cond=(node.n < 0)):
+        value = node.n.imag if isinstance(node.n, complex) else node.n
+
+        with self.inside('(', ')', cond=(value < 0)):
             self.write(repr(node.n))
 
     def visit_Tuple(self, node):
