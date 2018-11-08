@@ -159,7 +159,7 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
 
     @classmethod
     def _get_actual_lineno(cls, node):
-        if node.col_offset == -1 and isinstance(node, (ast.Expr, ast.Str)):
+        if isinstance(node, (ast.Expr, ast.Str)) and node.col_offset == -1:
             str_content = cls._get_string_content(node)
             node_lineno = node.lineno - str_content.count('\n')
         else:
