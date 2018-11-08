@@ -1,11 +1,11 @@
-import ast
+import ast, re
 from contextlib import contextmanager
 
 import pydot
 
 from astmonkey import utils
 from astmonkey.transformers import ParentChildNodeTransformer
-from astmonkey.utils import CommaWriter
+from astmonkey.utils import CommaWriter, check_version
 
 
 class GraphNodeVisitor(ast.NodeVisitor):
@@ -63,7 +63,7 @@ class GraphNodeVisitor(ast.NodeVisitor):
 
 
 """
-    Source generator node visitor from Python AST was originaly written by Armin Ronacher (2008), license BSD.
+Source generator node visitor from Python AST was originaly written by Armin Ronacher (2008), license BSD.
 """
 
 BOOLOP_SYMBOLS = {
@@ -85,6 +85,9 @@ BINOP_SYMBOLS = {
     ast.BitXor: '^',
     ast.Pow: '**'
 }
+
+if check_version(from_inclusive=(3, 5)):
+    BINOP_SYMBOLS[ast.MatMult] = '@'
 
 CMPOP_SYMBOLS = {
     ast.Eq: '==',
@@ -154,18 +157,25 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
         lines = len("".join(self.result).split('\n')) if self.result else 0
         return lines
 
-    @staticmethod
-    def _get_actual_lineno(node):
+    @classmethod
+    def _get_actual_lineno(cls, node):
         if node.col_offset == -1 and isinstance(node, (ast.Expr, ast.Str)):
-            # node is a multi line string and the line number is actually the last line
-            if isinstance(node, ast.Expr):
-                str_content = node.value.s
-            else:
-                str_content = node.s
+            str_content = cls._get_string_content(node)
             node_lineno = node.lineno - str_content.count('\n')
         else:
             node_lineno = node.lineno
         return node_lineno
+
+    @staticmethod
+    def _get_string_content(node):
+        # node is a multi line string and the line number is actually the last line
+        if isinstance(node, ast.Expr):
+            str_content = node.value.s
+        else:
+            str_content = node.s
+        if type(str_content) == bytes:
+            str_content = str_content.decode("utf-8")
+        return str_content
 
     def _newline_needed(self, node):
         lines = self._get_current_line_no()
@@ -178,6 +188,14 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
         self.indentation += count
         yield
         self.indentation -= count
+
+    @contextmanager
+    def inside(self, pre, post, cond=True):
+        if cond:
+            self.write(pre)
+        yield
+        if cond:
+            self.write(post)
 
     def write(self, x):
         self.result.append(x)
@@ -228,32 +246,54 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
         self.keyword_and_body('else:', node.orelse)
 
     def docstring(self, node):
-        self.write('"""{0}"""'.format(node.s))
+        s = repr(node.s)
+        s = re.sub(r'(?<!\\)\\n', '\n', s)
+        s = re.sub(r'(?<!\\)\\t', '\t', s)
+        self.write('%s%s%s' % (s[0]*2, s, s[0]*2))
 
     def signature(self, node, add_space=False):
         write_comma = CommaWriter(self.write, add_space_at_beginning=add_space)
         padding = [None] * (len(node.args) - len(node.defaults))
+
         for arg, default in zip(node.args, padding + node.defaults):
             self.signature_arg(arg, default, write_comma)
-        self.signature_vararg(node, write_comma)
-        self.signature_kwarg(node, write_comma)
 
-    def signature_kwarg(self, node, write_comma):
-        if node.kwarg is not None:
-            write_comma()
-            self.write('**' + node.kwarg)
+        self.signature_spec_arg(node, 'vararg', write_comma, prefix='*')
+        self.signature_kwonlyargs(node, write_comma)
+        self.signature_spec_arg(node, 'kwarg', write_comma, prefix='**')
 
-    def signature_vararg(self, node, write_comma):
-        if node.vararg is not None:
-            write_comma()
-            self.write('*' + node.vararg)
-
-    def signature_arg(self, arg, default, write_comma):
+    def signature_arg(self, arg, default, write_comma, prefix=''):
         write_comma()
+        self.write(prefix)
         self.visit(arg)
-        if default is not None:
+
+        if self._is_node_args_valid(arg, 'annotation'):
+            self.write(': ')
+            self.visit(arg.annotation)
+            if default is not None:
+                self.write(' = ')
+                self.visit(default)
+        elif default is not None:
             self.write('=')
             self.visit(default)
+
+    def signature_kwonlyargs(self, node, write_comma):
+        if not self._is_node_args_valid(node, 'kwonlyargs') or len(node.kwonlyargs) == 0:
+            return
+
+        if not node.vararg:
+            write_comma()
+            self.write('*')
+
+        for arg, default in zip(node.kwonlyargs, node.kw_defaults):
+            self.signature_arg(arg, default, write_comma)
+
+    def signature_spec_arg(self, node, var, write_comma, prefix):
+        arg = getattr(node, var)
+        if arg:
+            if hasattr(node, var + 'annotation'):
+                arg = ast.arg(arg, getattr(node, var + 'annotation'))
+            self.signature_arg(arg, None, write_comma, prefix)
 
     def decorators(self, node):
         if node.decorator_list:
@@ -298,7 +338,6 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
 
     def visit_Import(self, node):
         write_comma = CommaWriter(self.write)
-
         self.write('import ')
         for item in node.names:
             write_comma()
@@ -371,7 +410,7 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
             self.if_or_else(node)
 
     def if_or_else(self, node):
-        if isinstance(node.orelse[0], ast.If):
+        if len(node.orelse) == 1 and isinstance(node.orelse[0], ast.If):
             self.if_elif(node.orelse[0], use_elif=True)
         else:
             self.or_else(node)
@@ -380,7 +419,6 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
         self.for_loop(node)
 
     def for_loop(self, node, prefixes=()):
-
         self._prefixes(prefixes)
         self.write('for ')
         self.visit(node.target)
@@ -390,14 +428,12 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
         self.body_or_else(node)
 
     def visit_While(self, node):
-
         self.write('while ')
         self.visit(node.test)
         self.write(':')
         self.body_or_else(node)
 
     def visit_Pass(self, node):
-
         self.write('pass')
 
     def visit_Print(self, node):
@@ -417,20 +453,16 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
             self.write(',')
 
     def visit_Delete(self, node):
-
         self.write('del ')
-
         for target in node.targets:
             self.visit(target)
             if target is not node.targets[-1]:
                 self.write(', ')
 
     def visit_Global(self, node):
-
         self.write('global ' + ', '.join(node.names))
 
     def visit_Nonlocal(self, node):
-
         self.write('nonlocal ' + ', '.join(node.names))
 
     def visit_Return(self, node):
@@ -441,11 +473,9 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
             self.visit(node.value)
 
     def visit_Break(self, node):
-
         self.write('break')
 
     def visit_Continue(self, node):
-
         self.write('continue')
 
     def visit_Raise(self, node):
@@ -481,19 +511,18 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
 
     def visit_Call(self, node):
         self.visit(node.func)
-        self.write('(')
-        starargs = getattr(node, 'starargs', None)
-        kwargs = getattr(node, 'kwargs', None)
-        if starargs:
-            starargs = [starargs]
-        else:
-            starargs = []
-        if kwargs:
-            kwargs = [kwargs]
-        else:
-            kwargs = []
-        self.call_signature(node.args, node.keywords, starargs, kwargs)
-        self.write(')')
+        with self.inside('(', ')'):
+            starargs = getattr(node, 'starargs', None)
+            kwargs = getattr(node, 'kwargs', None)
+            if starargs:
+                starargs = [starargs]
+            else:
+                starargs = []
+            if kwargs:
+                kwargs = [kwargs]
+            else:
+                kwargs = []
+            self.call_signature(node.args, node.keywords, starargs, kwargs)
 
     def call_signature(self, args, keywords, starargs, kwargs):
         write_comma = CommaWriter(self.write)
@@ -535,25 +564,28 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
         self.write(repr(node.s))
 
     def visit_Num(self, node):
-        self.write(repr(node.n))
+        value = node.n.imag if isinstance(node.n, complex) else node.n
+
+        with self.inside('(', ')', cond=(value < 0)):
+            self.write(repr(node.n))
 
     def visit_Tuple(self, node):
-        self.write('(')
-        idx = -1
-        for idx, item in enumerate(node.elts):
-            if idx:
-                self.write(', ')
-            self.visit(item)
-        self.write(idx and ')' or ',)')
-
-    def sequence_visit(left, right):  # @NoSelf
-        def visit(self, node):
-            self.write(left)
+        with self.inside('(', ')'):
+            idx = -1
             for idx, item in enumerate(node.elts):
                 if idx:
                     self.write(', ')
                 self.visit(item)
-            self.write(right)
+            if not idx:
+                self.write(',')
+
+    def sequence_visit(left, right):  # @NoSelf
+        def visit(self, node):
+            with self.inside(left, right):
+                for idx, item in enumerate(node.elts):
+                    if idx:
+                        self.write(', ')
+                    self.visit(item)
 
         return visit
 
@@ -562,57 +594,51 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
     del sequence_visit
 
     def visit_Dict(self, node):
-        self.write('{')
-        for idx, (key, value) in enumerate(zip(node.keys, node.values)):
-            if idx:
-                self.write(', ')
-            if key:
-                self.visit(key)
-                self.write(': ')
-            else:
-                self.write('**')
-            self.visit(value)
-        self.write('}')
+        with self.inside('{', '}'):
+            for idx, (key, value) in enumerate(zip(node.keys, node.values)):
+                if idx:
+                    self.write(', ')
+                if key:
+                    self.visit(key)
+                    self.write(': ')
+                else:
+                    self.write('**')
+                self.visit(value)
 
     def visit_BinOp(self, node):
-        if isinstance(node.parent, (ast.BinOp, ast.Attribute)):
-            self.write('(')
-        self.visit(node.left)
-        self.write(' %s ' % BINOP_SYMBOLS[type(node.op)])
-        self.visit(node.right)
-        if isinstance(node.parent, (ast.BinOp, ast.Attribute)):
-            self.write(')')
+        with self.inside('(', ')', cond=isinstance(node.parent, (ast.BinOp, ast.Attribute))):
+            self.visit(node.left)
+            self.write(' %s ' % BINOP_SYMBOLS[type(node.op)])
+            self.visit(node.right)
 
     def visit_BoolOp(self, node):
-        self.write('(')
-        for idx, value in enumerate(node.values):
-            if idx:
-                self.write(' %s ' % BOOLOP_SYMBOLS[type(node.op)])
-            self.visit(value)
-        self.write(')')
+        with self.inside('(', ')'):
+            for idx, value in enumerate(node.values):
+                if idx:
+                    self.write(' %s ' % BOOLOP_SYMBOLS[type(node.op)])
+                self.visit(value)
 
     def visit_Compare(self, node):
-        # self.write('(')
-        self.visit(node.left)
-        for op, right in zip(node.ops, node.comparators):
-            self.write(' %s ' % CMPOP_SYMBOLS[type(op)])
-            self.visit(right)
-            # self.write(')')
+        with self.inside('(', ')', cond=(isinstance(node.parent, ast.Compare))):
+            self.visit(node.left)
+            for op, right in zip(node.ops, node.comparators):
+                self.write(' %s ' % CMPOP_SYMBOLS[type(op)])
+                self.visit(right)
 
     def visit_UnaryOp(self, node):
-        self.write('(')
-        op = UNARYOP_SYMBOLS[type(node.op)]
-        self.write(op)
-        if op == 'not':
-            self.write(' ')
-        self.visit(node.operand)
-        self.write(')')
+        with self.inside('(', ')', cond=isinstance(node.parent, (ast.BinOp, ast.UnaryOp))):
+            op = UNARYOP_SYMBOLS[type(node.op)]
+            self.write(op)
+            if op == 'not':
+                self.write(' ')
+
+            with self.inside('(', ')', cond=(not isinstance(node.operand, (ast.Name, ast.Num)))):
+                self.visit(node.operand)
 
     def visit_Subscript(self, node):
         self.visit(node.value)
-        self.write('[')
-        self.visit(node.slice)
-        self.write(']')
+        with self.inside('[', ']'):
+            self.visit(node.slice)
 
     def visit_Slice(self, node):
         self.slice_lower(node)
@@ -647,16 +673,13 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
             self.visit(node.value)
 
     def visit_Lambda(self, node):
-        if isinstance(node.parent, ast.Call):
-            self.write('(')
-        self.write('lambda')
-        self.signature(node.args, add_space=True)
-        self.write(': ')
-        self.write('(')
-        self.visit(node.body)
-        self.write(')')
-        if isinstance(node.parent, ast.Call):
-            self.write(')')
+        with self.inside('(', ')', cond=isinstance(node.parent, ast.Call)):
+            self.write('lambda')
+            self.signature(node.args, add_space=True)
+            self.write(': ')
+            with self.inside('(', ')'):
+                self.visit(node.body)
+
 
     def visit_Ellipsis(self, node):
         self.write('...')
@@ -677,31 +700,29 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
     del generator_visit
 
     def visit_DictComp(self, node):
-        self.write('{')
-        self.visit(node.key)
-        self.write(': ')
-        self.visit(node.value)
-        for comprehension in node.generators:
-            self.visit(comprehension)
-        self.write('}')
+        with self.inside('{', '}'):
+            self.visit(node.key)
+            self.write(': ')
+            self.visit(node.value)
+            for comprehension in node.generators:
+                self.visit(comprehension)
 
     def visit_IfExp(self, node):
-        self.visit(node.body)
-        self.write(' if ')
-        self.visit(node.test)
-        self.keyword_and_body(' else ', [node.orelse])
+        with self.inside('(', ')', cond=isinstance(node.parent, ast.BinOp)):
+            self.visit(node.body)
+            self.write(' if ')
+            self.visit(node.test)
+            self.keyword_and_body(' else ', [node.orelse])
 
     def visit_Starred(self, node):
         self.write('*')
         self.visit(node.value)
 
     def visit_Repr(self, node):
-        self.write('`')
-        self.visit(node.value)
-        self.write('`')
+        with self.inside('`', '`'):
+            self.visit(node.value)
 
     # Helper Nodes
-
     def visit_alias(self, node):
         self.write(node.name)
         if node.asname is not None:
@@ -718,7 +739,6 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
                 self.visit(if_)
 
     def visit_ExceptHandler(self, node):
-
         self.write('except')
         if node.type is not None:
             self.write(' ')
@@ -733,7 +753,6 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
         self.write(node.arg)
 
     def visit_Assert(self, node):
-
         self.write('assert ')
         self.visit(node.test)
         if node.msg:
@@ -741,7 +760,6 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
             self.visit(node.msg)
 
     def visit_TryExcept(self, node):
-
         self.write('try:')
         self.body(node.body)
         if node.handlers:
@@ -755,7 +773,6 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
             self.visit(handler)
 
     def visit_TryFinally(self, node):
-
         self.write('try:')
         self.body(node.body)
         self.final_body(node)
@@ -764,6 +781,10 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
         self.keyword_and_body('finally:', node.finalbody)
 
     def visit_With(self, node):
+        self.with_body(node)
+
+    def with_body(self, node, prefixes=[]):
+        self._prefixes(prefixes)
         self.write('with ')
         self.visit(node.context_expr)
         if node.optional_vars is not None:
@@ -807,12 +828,6 @@ class SourceGeneratorNodeVisitorPython30(SourceGeneratorNodeVisitorPython27):
         self.write(have_args and '):' or ':')
         self.body(node.body)
 
-    def signature_arg(self, arg, default, write_comma):
-        super().signature_arg(arg, default, write_comma)
-        if self._is_node_args_valid(arg, 'annotation'):
-            self.write(': ')
-            self.visit(arg.annotation)
-
     def visit_FunctionDef(self, node):
         self.decorators(node)
 
@@ -838,7 +853,6 @@ class SourceGeneratorNodeVisitorPython33(SourceGeneratorNodeVisitorPython32):
     __python_version__ = (3, 3)
 
     def visit_Try(self, node):
-
         self.write('try:')
         self.body(node.body)
         if node.handlers:
@@ -848,8 +862,9 @@ class SourceGeneratorNodeVisitorPython33(SourceGeneratorNodeVisitorPython32):
         if node.orelse:
             self.or_else(node)
 
-    def visit_With(self, node):
 
+    def with_body(self, node, prefixes=[]):
+        self._prefixes(prefixes)
         self.write('with ')
         for with_item in node.items:
             self.visit(with_item.context_expr)
@@ -878,16 +893,6 @@ class SourceGeneratorNodeVisitorPython34(SourceGeneratorNodeVisitorPython33):
         else:
             self.write(node.id)
 
-    def signature_vararg(self, node, write_comma):
-        if node.vararg is not None:
-            write_comma()
-            self.write('*' + node.vararg.arg)
-
-    def signature_kwarg(self, node, write_comma):
-        if node.kwarg is not None:
-            write_comma()
-            self.write('**' + node.kwarg.arg)
-
 
 class SourceGeneratorNodeVisitorPython35(SourceGeneratorNodeVisitorPython34):
     __python_version__ = (3, 5)
@@ -898,6 +903,9 @@ class SourceGeneratorNodeVisitorPython35(SourceGeneratorNodeVisitorPython34):
     def visit_AsyncFor(self, node):
         self.for_loop(node, prefixes=['async'])
 
+    def visit_AsyncWith(self, node):
+        self.with_body(node, prefixes=['async'])
+
     def visit_Await(self, node):
         self.write('await ')
         if self._is_node_args_valid(node, 'value'):
@@ -905,11 +913,10 @@ class SourceGeneratorNodeVisitorPython35(SourceGeneratorNodeVisitorPython34):
 
     def visit_Call(self, node):
         self.visit(node.func)
-        self.write('(')
-        args, starargs = self._separate_args_and_starargs(node)
-        keywords, kwargs = self._separate_keywords_and_kwargs(node)
-        self.call_signature(args, keywords, starargs, kwargs)
-        self.write(')')
+        with self.inside('(', ')'):
+            args, starargs = self._separate_args_and_starargs(node)
+            keywords, kwargs = self._separate_keywords_and_kwargs(node)
+            self.call_signature(args, keywords, starargs, kwargs)
 
     @staticmethod
     def _separate_keywords_and_kwargs(node):
@@ -945,19 +952,19 @@ class SourceGeneratorNodeVisitorPython36(SourceGeneratorNodeVisitorPython35):
 
     def visit_JoinedStr(self, node):
         if self._is_node_args_valid(node, 'values'):
-            self.write('f\'')
-            for item in node.values:
-                if isinstance(item, ast.Str):
-                    self.write(item.s.lstrip('\'').rstrip('\''))
-                else:
-                    self.visit(item)
-            self.write('\'')
+            with self.inside('f\'', '\''):
+                for item in node.values:
+                    if isinstance(item, ast.Str):
+                        self.write(item.s.lstrip('\'').rstrip('\'').replace("'", "\\'"))
+                    else:
+                        self.visit(item)
 
     def visit_FormattedValue(self, node):
         if self._is_node_args_valid(node, 'value'):
-            self.write('{')
-            self.visit(node.value)
-            self.write('}')
+            with self.inside('{', '}'):
+                self.visit(node.value)
+                if node.conversion != -1:
+                    self.write('!%c' % (node.conversion, ))
 
 
 SourceGeneratorNodeVisitor = utils.get_by_python_version([
