@@ -13,6 +13,7 @@ class ParentChildNodeTransformer(object):
     def _prepare_node(node):
         if not hasattr(node, 'parent'):
             node.parent = None
+        if not hasattr(node, 'parents'):
             node.parents = []
         if not hasattr(node, 'children'):
             node.children = []
