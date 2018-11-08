@@ -44,7 +44,7 @@ Example usage:
     assert(code == generated_code)
 
 transformers.ParentChildNodeTransformer
-----------------------------------
+---------------------------------------
 
 This transformer adds few fields to every node in AST:
 
