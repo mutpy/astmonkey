@@ -1,4 +1,5 @@
-import ast, re
+import ast
+import re
 from contextlib import contextmanager
 
 import pydot
@@ -130,12 +131,53 @@ def to_source(node, indent_with=' ' * 4):
     parameter is equal to four spaces as suggested by PEP 8, but it might be
     adjusted to match the application's styleguide.
     """
-    parent_child_transformer = ParentChildNodeTransformer()
-    parent_child_transformer.visit(node)
+    ParentChildNodeTransformer().visit(node)
+    FixLinenoNodeVisitor().visit(node)
     generator = SourceGeneratorNodeVisitor(indent_with)
     generator.visit(node)
 
     return ''.join(generator.result)
+
+
+class FixLinenoNodeVisitor(ast.NodeVisitor):
+    """A helper node visitor for the SourceGeneratorNodeVisitor.
+
+    Attempts to correct implausible line numbers. An example would be:
+
+    1: while a:
+    2:   pass
+    3: for a:
+    2:   pass
+
+    This would be corrected to:
+
+    1: while a:
+    2:   pass
+    3: for a:
+    4:   pass
+    """
+
+    def __init__(self):
+        self.min_lineno = 0
+
+    def generic_visit(self, node):
+        if hasattr(node, 'lineno'):
+            self._fix_lineno(node)
+        if hasattr(node, 'body') and isinstance(node.body, list):
+            self._process_body(node)
+        else:
+            super(FixLinenoNodeVisitor, self).generic_visit(node)
+
+    def _fix_lineno(self, node):
+        if node.lineno < self.min_lineno:
+            node.lineno = self.min_lineno
+        else:
+            self.min_lineno = node.lineno
+
+    def _process_body(self, node):
+        for body_node in node.body:
+            self.min_lineno += 1
+            self.visit(body_node)
 
 
 class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
@@ -249,7 +291,7 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
         s = repr(node.s)
         s = re.sub(r'(?<!\\)\\n', '\n', s)
         s = re.sub(r'(?<!\\)\\t', '\t', s)
-        self.write('%s%s%s' % (s[0]*2, s, s[0]*2))
+        self.write('%s%s%s' % (s[0] * 2, s, s[0] * 2))
 
     def signature(self, node, add_space=False):
         write_comma = CommaWriter(self.write, add_space_at_beginning=add_space)
@@ -680,7 +722,6 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
             with self.inside('(', ')'):
                 self.visit(node.body)
 
-
     def visit_Ellipsis(self, node):
         self.write('...')
 
@@ -862,7 +903,6 @@ class SourceGeneratorNodeVisitorPython33(SourceGeneratorNodeVisitorPython32):
         if node.orelse:
             self.or_else(node)
 
-
     def with_body(self, node, prefixes=[]):
         self._prefixes(prefixes)
         self.write('with ')
@@ -964,7 +1004,7 @@ class SourceGeneratorNodeVisitorPython36(SourceGeneratorNodeVisitorPython35):
             with self.inside('{', '}'):
                 self.visit(node.value)
                 if node.conversion != -1:
-                    self.write('!%c' % (node.conversion, ))
+                    self.write('!%c' % (node.conversion,))
 
 
 SourceGeneratorNodeVisitor = utils.get_by_python_version([
