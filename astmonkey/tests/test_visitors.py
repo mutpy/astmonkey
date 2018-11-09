@@ -309,7 +309,6 @@ class TestSourceGeneratorNodeVisitor(object):
             '(x, *y) = z',
             '[x, *y, x] = z',
 
-
             # kwonly arguments
             'def f(*, x):' + EOL + INDENT + PASS,
             'def f(*, x: int = 5):' + EOL + INDENT + PASS,
@@ -384,3 +383,11 @@ class TestSourceGeneratorNodeVisitor(object):
         generated = visitors.to_source(node)
         node_from_generated = ast.parse(generated)
         assert ast.dump(node) == ast.dump(node_from_generated)
+
+    def test_fix_linen_umbers(self):
+        """Check if an AST with wrong lineno attribute is corrected in the process."""
+        node = ast.parse('x = 1' + self.EOL + 'y = 2')
+        # set both line numbers to 1
+        node.body[1].lineno = 1
+        visitors.to_source(node)
+        assert node.body[1].lineno == 2
