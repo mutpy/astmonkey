@@ -439,8 +439,7 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
         self.if_elif(node)
 
     def if_elif(self, node, use_elif=False):
-        if self._newline_needed(node):
-            self.write_newline()
+        self.correct_line_number(node, within_statement=False)
         if use_elif:
             self.write('elif ')
         else:
