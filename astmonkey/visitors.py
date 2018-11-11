@@ -674,7 +674,7 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
                 self.write(' ')
 
             with self.inside('(', ')', cond=(not isinstance(node.operand, (ast.Name, ast.Num))
-                                             and not self._is_named_constant(node))):
+                                             and not self._is_named_constant(node.operand))):
                 self.visit(node.operand)
 
     def visit_Subscript(self, node):
@@ -836,7 +836,7 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
 
     @staticmethod
     def _is_named_constant(node):
-        return isinstance(node, ast.Expr) and hasattr(node, value) and isinstance(node.value, ast.Name)
+        return isinstance(node, ast.Expr) and hasattr(node, 'value') and isinstance(node.value, ast.Name)
 
 
 class SourceGeneratorNodeVisitorPython26(BaseSourceGeneratorNodeVisitor):
