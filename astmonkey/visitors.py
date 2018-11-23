@@ -165,8 +165,6 @@ class FixLinenoNodeVisitor(ast.NodeVisitor):
             self._fix_lineno(node)
         if hasattr(node, 'body') and isinstance(node.body, list):
             self._process_body(node)
-        else:
-            super(FixLinenoNodeVisitor, self).generic_visit(node)
 
     def _fix_lineno(self, node):
         if node.lineno < self.min_lineno:
