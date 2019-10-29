@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import sys
+
 import pytest
 
 try:
@@ -34,7 +36,10 @@ class TestGraphNodeVisitor(object):
         visitor.visit(node)
 
         dot_node = visitor.graph.get_node(str(node.body[0].value))[0]
-        assert dot_node.get_label() == 'ast.Num(n=1)'
+        if sys.version_info >= (3, 8):
+            assert dot_node.get_label() == 'ast.Constant(value=1, kind=None)'
+        else:
+            assert dot_node.get_label() == 'ast.Num(n=1)'
 
     def test_edge_label(self, visitor):
         node = transformers.ParentChildNodeTransformer().visit(ast.parse('x = 1'))
@@ -348,6 +353,16 @@ class TestSourceGeneratorNodeVisitor(object):
             "f'{x!r}'",
             "f'{x!s}'",
             "f'{x!a}'",
+        ]
+
+    if utils.check_version(from_inclusive=(3, 8)):
+        roundtrip_testdata += [
+            # assignment expressions
+            'if n := len(a) > 10:' + EOL + INDENT + PASS,
+            # positional-only parameters
+            'def f(a, /, b, *, c):' + EOL + INDENT + PASS,
+            # positional-only parameters with defaults
+            'def f(a=1, /, b=2, *, c=3):' + EOL + INDENT + PASS,
         ]
 
     # add additional tests for semantic testing

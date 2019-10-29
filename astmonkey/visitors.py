@@ -1013,6 +1013,51 @@ class SourceGeneratorNodeVisitorPython36(SourceGeneratorNodeVisitorPython35):
                     self.write('!%c' % (node.conversion,))
 
 
+class SourceGeneratorNodeVisitorPython38(SourceGeneratorNodeVisitorPython36):
+    __python_version__ = (3, 8)
+
+    def visit_Constant(self, node):
+        if type(node.value) == str:
+            self.write(repr(node.s))
+        elif node.value == Ellipsis:
+            self.write('...')
+        else:
+            self.write(str(node.value))
+
+    def visit_NamedExpr(self, node):
+        self.visit(node.target)
+        self.write(' := ')
+        self.visit(node.value)
+
+    def signature(self, node, add_space=False):
+        write_comma = CommaWriter(self.write, add_space_at_beginning=add_space)
+
+
+        defaults = list(node.defaults)
+
+        if node.posonlyargs:
+            padding = [None] * (len(node.posonlyargs) - len(node.defaults))
+            for arg, default in zip(node.posonlyargs, padding + defaults[:len(node.posonlyargs)]):
+                self.signature_arg(arg, default, write_comma)
+            self.write(', /')
+            defaults = defaults[len(node.posonlyargs):]
+
+        padding = [None] * (len(node.args) - len(node.defaults))
+        for arg, default in zip(node.args, padding + defaults):
+            self.signature_arg(arg, default, write_comma)
+
+        self.signature_spec_arg(node, 'vararg', write_comma, prefix='*')
+        self.signature_kwonlyargs(node, write_comma)
+        self.signature_spec_arg(node, 'kwarg', write_comma, prefix='**')
+
+    @classmethod
+    def _get_actual_lineno(cls, node):
+        if isinstance(node, ast.FunctionDef) and node.decorator_list:
+            return node.decorator_list[0].lineno
+        else:
+            return SourceGeneratorNodeVisitorPython36._get_actual_lineno(node)
+
+
 SourceGeneratorNodeVisitor = utils.get_by_python_version([
     SourceGeneratorNodeVisitorPython26,
     SourceGeneratorNodeVisitorPython27,
@@ -1022,5 +1067,6 @@ SourceGeneratorNodeVisitor = utils.get_by_python_version([
     SourceGeneratorNodeVisitorPython33,
     SourceGeneratorNodeVisitorPython34,
     SourceGeneratorNodeVisitorPython35,
-    SourceGeneratorNodeVisitorPython36
+    SourceGeneratorNodeVisitorPython36,
+    SourceGeneratorNodeVisitorPython38
 ])
