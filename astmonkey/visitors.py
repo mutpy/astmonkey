@@ -712,7 +712,7 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
     def visit_ExtSlice(self, node):
         for idx, item in enumerate(node.dims):
             if idx:
-                self.write(',')
+                self.write(', ')
             self.visit(item)
 
     def visit_Yield(self, node):
