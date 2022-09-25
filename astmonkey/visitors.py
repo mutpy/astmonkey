@@ -678,7 +678,16 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
     def visit_Subscript(self, node):
         self.visit(node.value)
         with self.inside('[', ']'):
-            self.visit(node.slice)
+            if isinstance(node.slice, ast.Tuple):
+                idx = -1
+                for idx, item in enumerate(node.slice.elts):
+                    if idx:
+                        self.write(', ')
+                    self.visit(item)
+                if not idx:
+                    self.write(',')
+            else:
+                self.visit(node.slice)
 
     def visit_Slice(self, node):
         self.slice_lower(node)
