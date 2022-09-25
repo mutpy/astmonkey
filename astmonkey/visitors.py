@@ -1022,6 +1022,12 @@ class SourceGeneratorNodeVisitorPython36(SourceGeneratorNodeVisitorPython35):
                 if node.conversion != -1:
                     self.write('!%c' % (node.conversion,))
 
+    def visit_AnnAssign(self, node):
+        self.visit(node.target)
+        self.write(': ')
+        self.visit(node.annotation)
+        self.write(' = ')
+        self.visit(node.value)
 
 class SourceGeneratorNodeVisitorPython38(SourceGeneratorNodeVisitorPython36):
     __python_version__ = (3, 8)

@@ -360,6 +360,10 @@ class TestSourceGeneratorNodeVisitor(object):
             "f'{x!r}'",
             "f'{x!s}'",
             "f'{x!a}'",
+            # annotated assignment
+            "a: int = 1",
+            # dubious annotated assignment of slice
+            "x[:]: None = ()",
         ]
 
     if utils.check_version(from_inclusive=(3, 8)):
