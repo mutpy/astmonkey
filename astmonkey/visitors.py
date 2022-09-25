@@ -1016,6 +1016,7 @@ class SourceGeneratorNodeVisitorPython36(SourceGeneratorNodeVisitorPython35):
 
     def visit_FormattedValue(self, node):
         if self._is_node_args_valid(node, 'value'):
+            self.add_missing_lines(node.value, True, True)
             with self.inside('{', '}'):
                 self.visit(node.value)
                 if node.conversion != -1:
