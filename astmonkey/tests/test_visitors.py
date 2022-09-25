@@ -387,6 +387,12 @@ class TestSourceGeneratorNodeVisitor(object):
         'b\'\'\'byte string' + EOL + 'next line' + EOL + '\'\'\'',
         r'r"""\a\b\f\n\r\t\v"""',
         'if x:' + EOL + INDENT + PASS + EOL + 'else:' + EOL + INDENT + 'if x:' + EOL + INDENT + INDENT + PASS,
+
+        # strings
+        '''s = 'this is \\'single quotes\\' inside single quotes' ''',
+        '''s = 'this is "double quotes" inside single quotes' ''',
+        '''s = "this is 'single quotes' inside double quotes" ''',
+        '''s = "this is \\"double quotes\\" inside double quotes" ''',
     ]
 
     if utils.check_version(from_inclusive=(3, 6)):
