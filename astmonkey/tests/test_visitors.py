@@ -165,6 +165,7 @@ class TestSourceGeneratorNodeVisitor(object):
         'try:' + EOL + INDENT + PASS + EOL + 'finally:' + EOL + INDENT + PASS,
         'try:' + EOL + INDENT + PASS + EOL + 'except Y:' + EOL + INDENT + PASS + EOL + 'except Z:' + EOL + INDENT + PASS,
         'try:' + EOL + INDENT + PASS + EOL + 'except Y:' + EOL + INDENT + PASS + EOL + 'else:' + EOL + INDENT + PASS,
+        'try:' + EOL + INDENT + PASS + EOL + 'except Y:' + EOL + INDENT + PASS + EOL + 'else:' + EOL + INDENT + PASS + EOL + 'finally:' + EOL + INDENT + PASS,
 
         # del
         'del x',

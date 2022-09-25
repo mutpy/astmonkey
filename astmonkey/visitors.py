@@ -909,10 +909,10 @@ class SourceGeneratorNodeVisitorPython33(SourceGeneratorNodeVisitorPython32):
         self.body(node.body)
         if node.handlers:
             self.try_handlers(node)
-        if node.finalbody:
-            self.final_body(node)
         if node.orelse:
             self.or_else(node)
+        if node.finalbody:
+            self.final_body(node)
 
     def with_body(self, node, prefixes=[]):
         self._prefixes(prefixes)
