@@ -777,6 +777,8 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
             self.write(' as ' + node.asname)
 
     def visit_comprehension(self, node):
+        if getattr(node, 'is_async', 0):
+            self.write(' async')
         self.write(' for ')
         self.visit(node.target)
         self.write(' in ')

@@ -364,6 +364,9 @@ class TestSourceGeneratorNodeVisitor(object):
             "a: int = 1",
             # dubious annotated assignment of slice
             "x[:]: None = ()",
+            # Async list literals & generators
+            "[i async for i in some_iterable]",
+            "(i async for i in some_iterable)",
         ]
 
     if utils.check_version(from_inclusive=(3, 8)):
