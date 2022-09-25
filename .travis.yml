@@ -2,16 +2,11 @@ language: python
 
 matrix:
   include:
-  - python: 2.7
-  - python: 3.4
-  - python: 3.5
-  - python: 3.6
   - python: 3.7
   - python: 3.8
+  - python: 3.9
+  - python: 3.10
 install:
-# python 2.6 and 3.3 compatibility
-- if [[ $TRAVIS_PYTHON_VERSION == 2.6 ]]; then pip install pycparser==2.14 cryptography==2.1.4; fi
-- if [[ $TRAVIS_PYTHON_VERSION == 3.3 ]]; then pip install virtualenv==15.1.0 setuptools==39.2.0; fi
 - pip install tox-travis
 - pip install coveralls
 script:
@@ -26,4 +21,4 @@ deploy:
   on:
     tags: true
     branch: master
-    python: '3.6'
+    python: '3.9'
