@@ -69,6 +69,8 @@ class TestSourceGeneratorNodeVisitor(object):
     EMPTY_FUNC = FUNC_DEF + EOL + INDENT + PASS
     SINGLE_LINE_DOCSTRING = "''' This is a single line docstring.'''"
     MULTI_LINE_DOCSTRING = "''' This is a multi line docstring." + EOL + EOL + 'Further description...' + EOL + "'''"
+    EMBEDDED_QUOTE_DOCSTRING = "'''this is \"double quotes\" inside single quotes'''"
+    DOC_FUNC = FUNC_DEF + EOL + INDENT + MULTI_LINE_DOCSTRING
     LINE_CONT = '\\'
 
     roundtrip_testdata = [
@@ -80,6 +82,7 @@ class TestSourceGeneratorNodeVisitor(object):
         '(a, b) = enumerate(c)',
         SIMPLE_ASSIGN + EOL + SIMPLE_ASSIGN,
         SIMPLE_ASSIGN + EOL + EOL + SIMPLE_ASSIGN,
+        EMBEDDED_QUOTE_DOCSTRING,
         EOL + SIMPLE_ASSIGN,
         EOL + EOL + SIMPLE_ASSIGN,
         'x = \'string assign\'',
@@ -204,6 +207,9 @@ class TestSourceGeneratorNodeVisitor(object):
 
         # decorator
         '@x(y)' + EOL + EMPTY_FUNC,
+        '@x(y)' + EOL + DOC_FUNC,
+        '@x(y)' + EOL + '@x(y)' + EOL + EMPTY_FUNC,
+        '@x(y)' + EOL + '@x(y)' + EOL + DOC_FUNC,
 
         # call
         'f(a)',
@@ -387,6 +393,7 @@ class TestSourceGeneratorNodeVisitor(object):
         """Check if converting code into AST and converting it back to code yields the same code."""
         node = ast.parse(source)
         generated = visitors.to_source(node)
+        print((source, generated))
         assert source == generated
 
     @pytest.mark.parametrize("source", semantic_testdata)

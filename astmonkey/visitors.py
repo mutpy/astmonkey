@@ -340,7 +340,7 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
             for decorator in node.decorator_list:
                 self.write('@')
                 self.visit(decorator)
-            self.write_newline()
+                self.write_newline()
 
     def visit(self, node):
         self.correct_line_number(node)
