@@ -3,8 +3,8 @@ from setuptools import setup
 
 import astmonkey
 
-with open('README.rst') as f:
-    long_description = f.read()
+with open('README.rst', 'rb') as f:
+    long_description = f.read().decode('utf-8', 'ignore')
 
 setup(
     name='astmonkey',
