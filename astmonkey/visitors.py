@@ -340,7 +340,7 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
             for decorator in node.decorator_list:
                 self.write('@')
                 self.visit(decorator)
-            self.write_newline()
+                self.write_newline()
 
     def visit(self, node):
         self.correct_line_number(node)
@@ -678,7 +678,16 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
     def visit_Subscript(self, node):
         self.visit(node.value)
         with self.inside('[', ']'):
-            self.visit(node.slice)
+            if isinstance(node.slice, ast.Tuple):
+                idx = -1
+                for idx, item in enumerate(node.slice.elts):
+                    if idx:
+                        self.write(', ')
+                    self.visit(item)
+                if not idx:
+                    self.write(',')
+            else:
+                self.visit(node.slice)
 
     def visit_Slice(self, node):
         self.slice_lower(node)
@@ -703,7 +712,7 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
     def visit_ExtSlice(self, node):
         for idx, item in enumerate(node.dims):
             if idx:
-                self.write(',')
+                self.write(', ')
             self.visit(item)
 
     def visit_Yield(self, node):
@@ -768,6 +777,8 @@ class BaseSourceGeneratorNodeVisitor(ast.NodeVisitor):
             self.write(' as ' + node.asname)
 
     def visit_comprehension(self, node):
+        if getattr(node, 'is_async', 0):
+            self.write(' async')
         self.write(' for ')
         self.visit(node.target)
         self.write(' in ')
@@ -900,10 +911,10 @@ class SourceGeneratorNodeVisitorPython33(SourceGeneratorNodeVisitorPython32):
         self.body(node.body)
         if node.handlers:
             self.try_handlers(node)
-        if node.finalbody:
-            self.final_body(node)
         if node.orelse:
             self.or_else(node)
+        if node.finalbody:
+            self.final_body(node)
 
     def with_body(self, node, prefixes=[]):
         self._prefixes(prefixes)
@@ -1007,11 +1018,18 @@ class SourceGeneratorNodeVisitorPython36(SourceGeneratorNodeVisitorPython35):
 
     def visit_FormattedValue(self, node):
         if self._is_node_args_valid(node, 'value'):
+            self.add_missing_lines(node.value, True, True)
             with self.inside('{', '}'):
                 self.visit(node.value)
                 if node.conversion != -1:
                     self.write('!%c' % (node.conversion,))
 
+    def visit_AnnAssign(self, node):
+        self.visit(node.target)
+        self.write(': ')
+        self.visit(node.annotation)
+        self.write(' = ')
+        self.visit(node.value)
 
 class SourceGeneratorNodeVisitorPython38(SourceGeneratorNodeVisitorPython36):
     __python_version__ = (3, 8)

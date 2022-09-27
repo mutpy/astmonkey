@@ -3,8 +3,8 @@ from setuptools import setup
 
 import astmonkey
 
-with open('README.rst') as f:
-    long_description = f.read()
+with open('README.rst', 'rb') as f:
+    long_description = f.read().decode('utf-8', 'ignore')
 
 setup(
     name='astmonkey',
@@ -18,7 +18,6 @@ setup(
     long_description=long_description,
     classifiers=[
         'Intended Audience :: Developers',
-        'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
@@ -26,6 +25,8 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
         'License :: OSI Approved :: Apache Software License'
     ]
 )
